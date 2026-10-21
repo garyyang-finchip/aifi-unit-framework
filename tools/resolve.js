@@ -1,0 +1,278 @@
+#!/usr/bin/env node
+'use strict';
+// Reference resolver of the AIFi Unit Framework (ERC Sections 3.6, 6.4, 8.3, 10.6, 13.3).
+//
+// Offline mode (default): resolves the worked examples from assets/erc-auf/examples using manifest.json
+// as the "registry" (unitId -> definition file), verifies hashes, expands containment by pinned versions,
+// flags shared elements, checks observation reconciliation and reports required extensions it does not know.
+//
+//   node tools/resolve.js                       all example units
+//   node tools/resolve.js --unit 4              one example unit
+//
+// On-chain mode: reads a deployed Unit Registry and Assertion Registry.
+//
+//   node tools/resolve.js --rpc <url> --registry <unitRegistry> --assertions <assertionRegistry> --unit <id> [--version <n>]
+//
+// Descriptor URIs of kind data:, http(s): and ipfs:// (through --ipfs-gateway) are fetched; anything else is
+// reported as unfetched (unverified, not invalid).
+
+const fs = require('fs');
+const path = require('path');
+const { JsonRpcProvider, Contract } = require('ethers');
+const { canonicalHash, elementId, parseUnitRef } = require('./lib/canonical');
+
+const args = process.argv.slice(2);
+const arg = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
+const has = (n) => args.includes(n);
+
+const MAX_DEPTH = Number(arg('--max-depth', '8'));
+const MAX_NODES = Number(arg('--max-nodes', '200'));
+const KNOWN_EXTENSIONS = new Set((arg('--known-extensions', '') || '').split(',').filter(Boolean));
+
+const UNIT_ABI = [
+  'function latestVersion(uint256) view returns (uint32)',
+  'function controllerOf(uint256) view returns (address)',
+  'function versionOf(uint256,uint32) view returns (bytes32,string,uint64,uint256)',
+  'function containedAt(uint256,uint32,uint256) view returns (tuple(uint256 unitId,uint32 version))',
+  'function acknowledgedAt(uint256,uint32,bytes32,uint8,address) view returns (uint64)',
+];
+const ASSERTION_ABI = [
+  'function assertionCount(uint256,uint32) view returns (uint256)',
+  'function assertionAt(uint256,uint32,uint256) view returns (bytes32)',
+  'function assertionOf(bytes32) view returns (tuple(uint8 kind,uint8 status,bool byController,uint32 version,uint64 assertedAt,uint64 validFrom,uint64 validUntil,address asserter,uint256 unitId,bytes32 profileId,bytes32 contentHash,bytes32 supersedes,bytes32 supersededBy,string contentURI))',
+  'function valuationCoreOf(bytes32) view returns (tuple(bytes32 methodId,bytes32 interestId,bytes32 assessmentBoundaryHash,bytes32 snapshotHash,uint8 resultKind,uint8 decimals,int256 value,bytes32 denominationId,uint64 asOf,uint64 horizonEnd))',
+];
+const KIND = ['none', 'characterization', 'observation', 'valuation', 'extension'];
+const STATUS = ['none', 'active', 'revoked', 'superseded'];
+const RESULT = ['unspecified', 'monetary', 'interval', 'distribution', 'scenario', 'vector', 'conditional', 'score', 'grade', 'not-valuable', 'insufficient-evidence', 'not-applicable'];
+
+// ----------------------------------------------------------------------------- sources
+
+function offlineSource() {
+  const dir = path.join(__dirname, '..', 'assets', 'erc-auf', 'examples');
+  const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
+  const byId = new Map(manifest.units.map((u) => [u.unitId, u]));
+  return {
+    kind: 'offline',
+    registry: manifest.registry,
+    chainId: manifest.chainId,
+    allUnitIds: () => manifest.units.map((u) => u.unitId),
+    async version(unitId, version) {
+      const u = byId.get(unitId);
+      if (!u) throw new Error(`unit ${unitId} not in manifest`);
+      if (version !== 1) throw new Error(`unit ${unitId} version ${version} not in manifest`);
+      return { boundaryHash: u.boundaryHash, descriptorURI: `file:${u.file}`, contains: u.contains, controller: u.controller };
+    },
+    async fetch(uri) {
+      if (uri.startsWith('file:')) return JSON.parse(fs.readFileSync(path.join(dir, uri.slice(5)), 'utf8'));
+      return null;
+    },
+    async companions(unitId, version) {
+      const u = byId.get(unitId);
+      const base = u.file.replace(/\.json$/, '');
+      return fs.readdirSync(dir).filter((f) => f.startsWith(base + '.') && f !== u.file).map((f) => ({ file: f, doc: JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')) }));
+    },
+    async assertions() { return []; },
+  };
+}
+
+function chainSource() {
+  const provider = new JsonRpcProvider(arg('--rpc'));
+  const units = new Contract(arg('--registry'), UNIT_ABI, provider);
+  const assertions = arg('--assertions') ? new Contract(arg('--assertions'), ASSERTION_ABI, provider) : null;
+  const gateway = arg('--ipfs-gateway', 'https://ipfs.io/ipfs/');
+  return {
+    kind: 'chain',
+    registry: arg('--registry').toLowerCase(),
+    allUnitIds: () => { throw new Error('--unit is required in on-chain mode'); },
+    async version(unitId, version) {
+      const latest = Number(await units.latestVersion(unitId));
+      if (version > latest) throw new Error(`unit ${unitId} has no version ${version}`);
+      const [boundaryHash, descriptorURI, , containsCount] = await units.versionOf(unitId, version);
+      const contains = [];
+      for (let i = 0; i < Number(containsCount); i++) {
+        const r = await units.containedAt(unitId, version, i);
+        contains.push({ unitId: Number(r.unitId), version: Number(r.version) });
+      }
+      return { boundaryHash, descriptorURI, contains, controller: await units.controllerOf(unitId), latest };
+    },
+    async fetch(uri) {
+      if (uri.startsWith('data:')) {
+        const m = /^data:([^,;]*)(;base64)?,(.*)$/s.exec(uri);
+        const body = m[2] ? Buffer.from(m[3], 'base64').toString('utf8') : decodeURIComponent(m[3]);
+        return JSON.parse(body);
+      }
+      let url = uri;
+      if (uri.startsWith('ipfs://')) url = gateway + uri.slice(7);
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
+      }
+      return null;
+    },
+    async companions() { return []; },
+    async assertions(unitId, version) {
+      if (!assertions) return [];
+      const n = Number(await assertions.assertionCount(unitId, version));
+      const out = [];
+      for (let i = 0; i < n; i++) {
+        const id = await assertions.assertionAt(unitId, version, i);
+        const a = await assertions.assertionOf(id);
+        const entry = {
+          assertionId: id, kind: KIND[Number(a.kind)], status: STATUS[Number(a.status)], byController: a.byController,
+          asserter: a.asserter, profileId: a.profileId, contentHash: a.contentHash, contentURI: a.contentURI,
+          validFrom: Number(a.validFrom), validUntil: Number(a.validUntil), assertedAt: Number(a.assertedAt),
+          supersedes: a.supersedes, supersededBy: a.supersededBy,
+        };
+        const now = Math.floor(Date.now() / 1000);
+        entry.current = entry.status === 'active' && now >= entry.validFrom && (entry.validUntil === 0 || now <= entry.validUntil);
+        if (entry.kind === 'valuation') {
+          const c = await assertions.valuationCoreOf(id);
+          entry.valuation = { methodId: c.methodId, interestId: c.interestId, assessmentBoundaryHash: c.assessmentBoundaryHash, snapshotHash: c.snapshotHash, resultKind: RESULT[Number(c.resultKind)], value: c.value.toString(), decimals: Number(c.decimals), denominationId: c.denominationId, asOf: Number(c.asOf), horizonEnd: Number(c.horizonEnd) };
+        }
+        out.push(entry);
+      }
+      return out;
+    },
+  };
+}
+
+// ----------------------------------------------------------------------------- resolution
+
+function checkExtensions(doc, where, report) {
+  const walk = (obj, p) => {
+    if (!obj || typeof obj !== 'object') return;
+    if (obj.extensions && typeof obj.extensions === 'object') {
+      for (const [k, v] of Object.entries(obj.extensions)) {
+        if (v && v.required === true && !KNOWN_EXTENSIONS.has(k)) report.unsupported.push({ where: `${where}${p}`, extension: k });
+      }
+    }
+    for (const [k, v] of Object.entries(obj)) if (k !== 'extensions') walk(v, `${p}.${k}`);
+  };
+  walk(doc, '');
+}
+
+function checkObservation(doc) {
+  const problems = [];
+  const n = (s) => BigInt(Math.round(Number(s) * 1e6));
+  for (const a of doc.assets || []) {
+    const members = ['opening', 'closing', 'inflow', 'outflow', 'minted', 'burned', 'adjustments'];
+    const missing = new Set(a.missing || []);
+    const absent = members.filter((m) => a[m] === undefined && !missing.has(m));
+    if (absent.length) problems.push(`asset ${a.asset}: members absent without being listed as missing: ${absent.join(', ')}`);
+    if (members.every((m) => a[m] !== undefined)) {
+      const adj = a.adjustments.reduce((acc, x) => acc + n(x.amount), 0n);
+      const ok = n(a.closing) - n(a.opening) === n(a.inflow) - n(a.outflow) + n(a.minted) - n(a.burned) + adj;
+      if (!ok) problems.push(`asset ${a.asset}: reconciliation failed`);
+    } else {
+      problems.push(`asset ${a.asset}: reconciliation not checkable (missing: ${[...missing].join(', ')}); missing values are unknown, not zero`);
+    }
+  }
+  return problems;
+}
+
+async function resolveUnit(src, unitId, version, report, pathSoFar = [], depth = 0) {
+  if (report.nodes.length >= MAX_NODES) { report.partial.push({ unitId, version, reason: 'max nodes reached' }); return null; }
+  if (depth > MAX_DEPTH) { report.partial.push({ unitId, version, reason: 'max depth reached' }); return null; }
+  const v = await src.version(unitId, version);
+  const node = { unitId, version, boundaryHash: v.boundaryHash, controller: v.controller, descriptorURI: v.descriptorURI, verified: false, elements: [], children: [], problems: [] };
+  report.nodes.push(node);
+  let doc = null;
+  try { doc = await src.fetch(v.descriptorURI); } catch (e) { node.problems.push(`fetch failed: ${e.message}`); }
+  if (!doc) { node.problems.push('descriptor not fetched; unverified'); }
+  else {
+    const h = canonicalHash(doc);
+    node.verified = h === v.boundaryHash;
+    if (!node.verified) node.problems.push(`descriptor hash ${h} does not match on-chain boundaryHash ${v.boundaryHash}`);
+    node.name = doc.unit && doc.unit.name;
+    checkExtensions(doc, `unit ${unitId}@${version}`, report);
+    const ids = new Map();
+    for (const e of doc.elements || []) {
+      const id = elementId(e.kind, e.ref);
+      if (ids.has(id)) node.problems.push(`duplicate elementId ${id}`);
+      ids.set(id, e);
+      node.elements.push({ elementId: id, kind: e.kind, ref: e.ref, label: e.label });
+      const key = id;
+      if (!report.elementIndex.has(key)) report.elementIndex.set(key, []);
+      report.elementIndex.get(key).push({ path: [...pathSoFar, `${unitId}@${version}`], relation: null });
+    }
+    for (const r of doc.relations || []) {
+      for (const end of [r.from, r.to]) if (end !== 'unit' && !ids.has(end)) node.problems.push(`relation ${r.type} references unknown endpoint ${end}`);
+      if (r.type === 'licenses' || r.type === 'owns' || r.type === 'holds' || r.type === 'revenue-share') {
+        const hits = report.elementIndex.get(r.to);
+        if (hits) hits[hits.length - 1].relation = { type: r.type, share: r.share, exclusive: r.exclusive };
+      }
+    }
+    // containment: on-chain list must match the definition's contains relations
+    const declared = (doc.relations || []).filter((r) => r.type === 'contains').map((r) => ids.get(r.to)).filter(Boolean).map((e) => parseUnitRef(e.ref)).filter(Boolean);
+    const declaredSet = new Set(declared.map((d) => `${d.registry}:${d.unitId}@${d.version}`));
+    const onchainSet = new Set(v.contains.map((c) => `${src.registry}:${c.unitId}@${c.version}`));
+    for (const d of declaredSet) if (!onchainSet.has(d)) node.problems.push(`contains ${d} declared in the definition but not recorded on chain`);
+    for (const c of onchainSet) if (!declaredSet.has(c)) node.problems.push(`contains ${c} recorded on chain but not declared in the definition`);
+  }
+  for (const c of v.contains) {
+    const child = await resolveUnit(src, c.unitId, c.version, report, [...pathSoFar, `${unitId}@${version}`], depth + 1);
+    if (child) node.children.push(child);
+  }
+  // companions (offline) and assertions (chain)
+  const companions = await src.companions(unitId, version);
+  node.companions = [];
+  for (const { file, doc: cdoc } of companions) {
+    const entry = { file, kind: cdoc.kind, contentHash: canonicalHash(cdoc), subjectMatches: cdoc.subject && cdoc.subject.boundaryHash === v.boundaryHash };
+    checkExtensions(cdoc, `${file}`, report);
+    if (cdoc.kind === 'observation') entry.problems = checkObservation(cdoc);
+    if (cdoc.kind === 'valuation') entry.summary = { interest: cdoc.interest.id, perspective: cdoc.interest.perspective, method: cdoc.method.name || cdoc.method.id, resultKind: cdoc.result.kind, value: cdoc.result.value, denomination: cdoc.result.denomination, assessmentBoundaryDiffers: !!(cdoc.assessmentBoundary && cdoc.assessmentBoundary.hash !== cdoc.subject.boundaryHash) };
+    node.companions.push(entry);
+  }
+  node.assertions = await src.assertions(unitId, version);
+  return node;
+}
+
+function sharedElements(report) {
+  const shared = [];
+  for (const [id, hits] of report.elementIndex.entries()) {
+    if (hits.length > 1) shared.push({ elementId: id, occurrences: hits.map((h) => ({ path: h.path.join(' > '), relation: h.relation })) });
+  }
+  return shared;
+}
+
+async function main() {
+  const src = has('--rpc') ? chainSource() : offlineSource();
+  const unitIds = has('--unit') ? [Number(arg('--unit'))] : src.allUnitIds();
+  const version = Number(arg('--version', '1'));
+  const out = [];
+  let problems = 0;
+  for (const unitId of unitIds) {
+    const report = { nodes: [], partial: [], unsupported: [], elementIndex: new Map() };
+    const root = await resolveUnit(src, unitId, version, report);
+    const shared = sharedElements(report);
+    const summary = { root, partial: report.partial, unsupported: report.unsupported, sharedElements: shared, note: 'Valuations are listed per interest, denomination and assessment boundary and are never aggregated by this resolver.' };
+    out.push(summary);
+    for (const n of report.nodes) problems += n.problems.length + (n.companions || []).reduce((a, c) => a + (c.problems ? c.problems.length : 0), 0);
+    problems += report.unsupported.length;
+  }
+  if (has('--json')) { console.log(JSON.stringify(out, (k, v) => (typeof v === 'bigint' ? v.toString() : v), 2)); }
+  else {
+    for (const s of out) {
+      const print = (n, indent) => {
+        console.log(`${' '.repeat(indent)}unit ${n.unitId}@${n.version} ${n.name ? JSON.stringify(n.name) : ''} ${n.verified ? 'verified' : 'UNVERIFIED'} controller=${n.controller}`);
+        for (const p of n.problems) console.log(`${' '.repeat(indent + 2)}! ${p}`);
+        for (const c of n.companions || []) {
+          const extra = c.summary ? ` ${c.summary.interest} (${c.summary.perspective}) ${c.summary.resultKind}${c.summary.value !== undefined ? ' ' + c.summary.value + ' ' + (c.summary.denomination || '') : ''}` : '';
+          console.log(`${' '.repeat(indent + 2)}- ${c.kind}: ${c.file}${c.subjectMatches ? '' : ' [subject mismatch]'}${extra}`);
+          for (const p of c.problems || []) console.log(`${' '.repeat(indent + 4)}! ${p}`);
+        }
+        for (const a of n.assertions || []) console.log(`${' '.repeat(indent + 2)}- ${a.kind} ${a.assertionId} ${a.status}${a.current ? '' : ' (not current)'} by ${a.asserter}${a.byController ? ' [controller]' : ''}${a.valuation ? ` ${a.valuation.resultKind} ${a.valuation.value}e-${a.valuation.decimals}` : ''}`);
+        for (const ch of n.children) print(ch, indent + 2);
+      };
+      print(s.root, 0);
+      for (const sh of s.sharedElements) console.log(`  shared element ${sh.elementId} appears ${sh.occurrences.length} times: ${sh.occurrences.map((o) => `${o.path}${o.relation ? ` [${o.relation.type}${o.relation.share ? ' share ' + o.relation.share : ''}]` : ''}`).join('; ')} -> count once at the parent`);
+      for (const u of s.unsupported) console.log(`  UNSUPPORTED required extension ${u.extension} at ${u.where}`);
+      for (const p of s.partial) console.log(`  PARTIAL: ${p.unitId}@${p.version}: ${p.reason}`);
+    }
+  }
+  if (problems) { console.error(`${problems} problem(s) reported`); process.exit(1); }
+}
+
+main().catch((e) => { console.error(e); process.exit(1); });
