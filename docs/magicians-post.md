@@ -1,6 +1,8 @@
-# Draft Magicians post
+# Magicians post
 
-Suggested title: `Draft ERC: AIFi Unit Framework (AUF) - boundary, roles and valuation statements for AI economic units`
+Posted on 2026-10-21 as topic 30040: https://ethereum-magicians.org/t/draft-erc-aifi-unit-framework-auf-boundary-roles-and-valuation-statements-for-ai-economic-units/30040
+
+Title: `Draft ERC: AIFi Unit Framework (AUF) - boundary, roles and valuation statements for AI economic units`
 
 Category: ERCs
 

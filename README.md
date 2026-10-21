@@ -2,7 +2,7 @@
 
 Reference repository of the draft ERC **AIFi Unit Framework**: a registry and descriptor model through which any economic object in an AI-driven economy (a running agent, a static skill, a task with escrowed funds, a model license, a compute quota, a data right, a capital position, or any composition of these, including agent swarms) is named, bounded, described, observed, classified and valued as one whole.
 
-Status: Draft text ready for filing (placeholder number 9999, `discussions-to` to be set once the Ethereum Magicians thread is posted). Reference implementation, schemas, vectors and worked examples are complete; the Sepolia evidence run is prepared (see below).
+Status: Draft text ready for filing (placeholder number 9999). Discussion thread: https://ethereum-magicians.org/t/draft-erc-aifi-unit-framework-auf-boundary-roles-and-valuation-statements-for-ai-economic-units/30040. Reference implementation, schemas, vectors and worked examples are complete; the Sepolia evidence run is prepared (see below).
 
 ## What it is
 
@@ -96,7 +96,7 @@ Prepared, not yet executed. The evidence run (`script/SepoliaEvidence.s.sol`, re
 
 ## Next steps
 
-1. Post the Magicians thread (`docs/magicians-post.md`), set `discussions-to`, build the filing package and open the ethereum/ERCs pull request from a branch cut from upstream master.
+1. Build the filing package and open the ethereum/ERCs pull request from a branch cut from upstream master (the Magicians thread is posted and `discussions-to` is set).
 2. Run the Sepolia evidence phases and record the evidence.
 3. Collect review feedback on the thread and iterate.
 
