@@ -1,0 +1,75 @@
+{
+  "auf": "1.0",
+  "kind": "valuation",
+  "subject": {
+    "registry": "eip155:11155111:0xe4ecaf6f87a700962f33aaa1a8f4b8e02fa180f8",
+    "unitId": 6,
+    "version": 1,
+    "boundaryHash": "0x5c00d353a218fd49ae6c1e045df24f2048fbbd3416b81f1208af6d84de403c76"
+  },
+  "assessmentBoundary": {
+    "hash": "0x5c00d353a218fd49ae6c1e045df24f2048fbbd3416b81f1208af6d84de403c76"
+  },
+  "interest": {
+    "id": "auf:interest:obligation@1",
+    "perspective": "holder"
+  },
+  "snapshot": {
+    "asOf": "2026-11-01T00:00:00Z",
+    "hash": "0x44256531b03972bbc15514a3b9252b68271cf9256380ab9ee41156baa1d14a6e"
+  },
+  "method": {
+    "id": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+    "name": "auf:method:conditional-payoff@1",
+    "params": {
+      "denomination": "USD",
+      "scenarios": [
+        {
+          "name": "task fails",
+          "probability": "0.4",
+          "payoff": "-100"
+        },
+        {
+          "name": "task accepted",
+          "probability": "0.6",
+          "payoff": "0"
+        }
+      ],
+      "rate": "0.1",
+      "periods": 1,
+      "probabilityBasis": "estimated",
+      "costsIncluded": true
+    }
+  },
+  "inputs": {
+    "data": [
+      {
+        "element": "0x30d31b8609616f3149398ad2c407ba3eb6b938d0839bc73bdd9d37587df24884"
+      }
+    ],
+    "estimates": [
+      "failure probability estimated from the worker's history"
+    ],
+    "coverage": "full"
+  },
+  "result": {
+    "kind": "scenario",
+    "denomination": "USD",
+    "decimals": 2,
+    "scenarios": [
+      {
+        "name": "task fails",
+        "probability": "0.4",
+        "value": "-100"
+      },
+      {
+        "name": "task accepted",
+        "probability": "0.6",
+        "value": "0"
+      }
+    ],
+    "value": "-36.36"
+  },
+  "evaluator": "eip155:11155111:0x00000000000000000000000000000000000000ef",
+  "notes": "(0.4 x -100 + 0.6 x 0) / 1.1 = -36.3636..., rounded to two decimals."
+}

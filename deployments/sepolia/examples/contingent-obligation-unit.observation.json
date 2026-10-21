@@ -1,0 +1,36 @@
+{
+  "auf": "1.0",
+  "kind": "observation",
+  "subject": {
+    "registry": "eip155:11155111:0xe4ecaf6f87a700962f33aaa1a8f4b8e02fa180f8",
+    "unitId": 6,
+    "version": 1,
+    "boundaryHash": "0x5c00d353a218fd49ae6c1e045df24f2048fbbd3416b81f1208af6d84de403c76"
+  },
+  "window": {
+    "from": "2026-10-01T00:00:00Z",
+    "to": "2026-10-31T23:59:59Z"
+  },
+  "snapshotAt": "2026-10-31T23:59:59Z",
+  "assets": [
+    {
+      "asset": "eip155:11155111/erc20:0x00000000000000000000000000000000000000cc",
+      "opening": "0",
+      "closing": "0",
+      "inflow": "0",
+      "outflow": "0",
+      "minted": "0",
+      "burned": "0",
+      "adjustments": [],
+      "transfers": []
+    }
+  ],
+  "coverage": {
+    "observed": [
+      "guarantee-out port"
+    ],
+    "missing": [],
+    "method": "indexer over the guarantor account",
+    "source": "urn:x:indexer:example"
+  }
+}

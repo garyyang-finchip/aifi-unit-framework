@@ -1,0 +1,693 @@
+{
+  "note": "Registry state decoded from eth_call at the stated block, after the evidence run. Ids, hashes and URIs match deployments/sepolia/vectors/examples.json.",
+  "block": 11964628,
+  "unitRegistry": "0xE4EcAf6f87A700962f33AAa1A8f4B8e02FA180f8",
+  "assertionRegistry": "0xC4f30AfAFFC9E5a7bDEd58c411B87ABe3FBbEd00",
+  "units": [
+    {
+      "unitId": 1,
+      "file": "examples/skill-multi-license.json",
+      "controller": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+      "frozen": false,
+      "latestVersion": 2,
+      "versions": [
+        {
+          "version": 1,
+          "boundaryHash": "0x23fb803a842d4839137c8ac30df5b6a7fd65b738707b578d60336a56572a97f9",
+          "descriptorURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/skill-multi-license.json",
+          "publishedAt": 1792608936,
+          "contains": [],
+          "assertions": [
+            {
+              "assertionId": "0x50ab6ec11ee4d241e972dbe20d7a9c4ecfe2e51754d62c45fb6a5c09fc5283ae",
+              "kind": "characterization",
+              "status": "active",
+              "byController": true,
+              "asserter": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+              "profileId": "0xa95ac67e63b0f953096f5b4b725cc52c051a6b6f9a0bb5d5eb8e9673c859ed48",
+              "contentHash": "0xe60bbe0d519c6e5af8811426b23ece6f19e5ee065b0940ccbbd604d7d9bbb934",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/skill-multi-license.characterization.json",
+              "assertedAt": 1792611384,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000"
+            },
+            {
+              "assertionId": "0x2e6449226ce5f96b735a4fbbd0b800be898eb1c7f1f03c275f05f3be309294de",
+              "kind": "observation",
+              "status": "active",
+              "byController": false,
+              "asserter": "0xB4Af5c659BC10Cd0766CF0508b1f1Db34236c5E5",
+              "profileId": "0x72aa51a169997ba1c40d028c965c3b1300b2e30d62806c68cda7e7cab7e57f52",
+              "contentHash": "0x40b2d9efc91b1885a7e4552e18281858a99b65c0a7f1453ca6dbba21b83fc900",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/skill-multi-license.observation.json",
+              "assertedAt": 1792611396,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "observation": {
+                "snapshotHash": "0x40b2d9efc91b1885a7e4552e18281858a99b65c0a7f1453ca6dbba21b83fc900",
+                "windowStart": 1790812800,
+                "windowEnd": 1793491199
+              }
+            },
+            {
+              "assertionId": "0x45f8bf67616819cf9ce58ab31bfe4435228641e5b86fe53934604ac3bd8c5357",
+              "kind": "valuation",
+              "status": "superseded",
+              "byController": false,
+              "asserter": "0xB4Af5c659BC10Cd0766CF0508b1f1Db34236c5E5",
+              "profileId": "0x51ac1ab7eca131d0073c7c03024471be2e6fb28313e9c07a031ba4312731e8d5",
+              "contentHash": "0xa66ab3160810e2cd59e368b0c957461515af3530954ac6a5e1af2b25db4804db",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/skill-multi-license.valuation.realized-net-cash-flow.json",
+              "assertedAt": 1792611408,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x2450206ba91f75a41424ec79978db6ff01f628fa383bdb37c826703a04d1a1aa",
+              "valuation": {
+                "methodId": "0x51ac1ab7eca131d0073c7c03024471be2e6fb28313e9c07a031ba4312731e8d5",
+                "interestId": "0x93b59c859e870e0bccceb6518099af0b1c3b96134f2ba940bd9e57426828a681",
+                "assessmentBoundaryHash": "0x23fb803a842d4839137c8ac30df5b6a7fd65b738707b578d60336a56572a97f9",
+                "snapshotHash": "0x40b2d9efc91b1885a7e4552e18281858a99b65c0a7f1453ca6dbba21b83fc900",
+                "resultKind": 1,
+                "decimals": 2,
+                "value": "6500",
+                "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+                "asOf": 1793491199,
+                "horizonEnd": 1793491199
+              }
+            },
+            {
+              "assertionId": "0x522fb2173ef9d1409ec5a0e43df6e00d5c1f661358048a23a11909ea774dc1f5",
+              "kind": "valuation",
+              "status": "revoked",
+              "byController": false,
+              "asserter": "0xB4Af5c659BC10Cd0766CF0508b1f1Db34236c5E5",
+              "profileId": "0x8da6d9f12fdcbd5651f304c51b4f5b96987f8cd55b7178844f5e0f55085bd007",
+              "contentHash": "0x18f753bdbab7b0843455be83d732254d10c087071dee87fb474cdbf3b1c0d657",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/skill-multi-license.valuation.net-equity.json",
+              "assertedAt": 1792611420,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "valuation": {
+                "methodId": "0x8da6d9f12fdcbd5651f304c51b4f5b96987f8cd55b7178844f5e0f55085bd007",
+                "interestId": "0x26910e4924975fae7c723c9d3b43f9fa35fd201589c70ac969fcad8860c5080d",
+                "assessmentBoundaryHash": "0x23fb803a842d4839137c8ac30df5b6a7fd65b738707b578d60336a56572a97f9",
+                "snapshotHash": "0x40b2d9efc91b1885a7e4552e18281858a99b65c0a7f1453ca6dbba21b83fc900",
+                "resultKind": 1,
+                "decimals": 2,
+                "value": "7000",
+                "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+                "asOf": 1793491200,
+                "horizonEnd": 0
+              }
+            },
+            {
+              "assertionId": "0x243c0193973591cbaa0a80b7f379715f1eef3b6dd85f0acbbbf02be5eb217f66",
+              "kind": "valuation",
+              "status": "active",
+              "byController": false,
+              "asserter": "0xB4Af5c659BC10Cd0766CF0508b1f1Db34236c5E5",
+              "profileId": "0xc87ccdce9b29353f5516392f5dd0d505b373965910baa6e7e95b49431cf22d22",
+              "contentHash": "0x570ac4893ab7a287a6e3203c2ee3604001b2fb92810b49fcbc9b53faf44f840f",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/skill-multi-license.valuation.revenue-right-dcf.json",
+              "assertedAt": 1792611432,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "valuation": {
+                "methodId": "0xc87ccdce9b29353f5516392f5dd0d505b373965910baa6e7e95b49431cf22d22",
+                "interestId": "0x4c1b68016dc3f594b00ab3dbca10785549b6647f31fa8461a12d1f4e73f927d1",
+                "assessmentBoundaryHash": "0x23fb803a842d4839137c8ac30df5b6a7fd65b738707b578d60336a56572a97f9",
+                "snapshotHash": "0x40b2d9efc91b1885a7e4552e18281858a99b65c0a7f1453ca6dbba21b83fc900",
+                "resultKind": 1,
+                "decimals": 2,
+                "value": "11281",
+                "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+                "asOf": 1793491200,
+                "horizonEnd": 1798761599
+              }
+            },
+            {
+              "assertionId": "0x2450206ba91f75a41424ec79978db6ff01f628fa383bdb37c826703a04d1a1aa",
+              "kind": "valuation",
+              "status": "active",
+              "byController": false,
+              "asserter": "0xB4Af5c659BC10Cd0766CF0508b1f1Db34236c5E5",
+              "profileId": "0x51ac1ab7eca131d0073c7c03024471be2e6fb28313e9c07a031ba4312731e8d5",
+              "contentHash": "0xa66ab3160810e2cd59e368b0c957461515af3530954ac6a5e1af2b25db4804db",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/skill-multi-license.valuation.realized-net-cash-flow.json",
+              "assertedAt": 1792612332,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x45f8bf67616819cf9ce58ab31bfe4435228641e5b86fe53934604ac3bd8c5357",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "valuation": {
+                "methodId": "0x51ac1ab7eca131d0073c7c03024471be2e6fb28313e9c07a031ba4312731e8d5",
+                "interestId": "0x93b59c859e870e0bccceb6518099af0b1c3b96134f2ba940bd9e57426828a681",
+                "assessmentBoundaryHash": "0x23fb803a842d4839137c8ac30df5b6a7fd65b738707b578d60336a56572a97f9",
+                "snapshotHash": "0x40b2d9efc91b1885a7e4552e18281858a99b65c0a7f1453ca6dbba21b83fc900",
+                "resultKind": 1,
+                "decimals": 2,
+                "value": "6500",
+                "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+                "asOf": 1793491199,
+                "horizonEnd": 1793491199
+              }
+            }
+          ]
+        },
+        {
+          "version": 2,
+          "boundaryHash": "0x00df32a0a95943716d299bd6d28e6939bedae2b80f2a3728745e2b33f997e133",
+          "descriptorURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/skill-multi-license.v2.json",
+          "publishedAt": 1792612356,
+          "contains": [],
+          "assertions": []
+        }
+      ]
+    },
+    {
+      "unitId": 2,
+      "file": "examples/agent-subunit-a.json",
+      "controller": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+      "frozen": false,
+      "latestVersion": 1,
+      "versions": [
+        {
+          "version": 1,
+          "boundaryHash": "0x0bb7be9ed144dd4a8aec9b71a3b2c3a3520bafdbd63cb214bcef91ca20f00b82",
+          "descriptorURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/agent-subunit-a.json",
+          "publishedAt": 1792608948,
+          "contains": [],
+          "assertions": [
+            {
+              "assertionId": "0x956b58e55d895dc5fd0cec218535d0b2b73fc37702f25777403bdd4adfa1b8df",
+              "kind": "characterization",
+              "status": "active",
+              "byController": true,
+              "asserter": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+              "profileId": "0xa95ac67e63b0f953096f5b4b725cc52c051a6b6f9a0bb5d5eb8e9673c859ed48",
+              "contentHash": "0xa734c56d3d4f2848266ba3d681b52321ad651f4633e59da046e0d64dbdc1fe14",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/agent-subunit-a.characterization.json",
+              "assertedAt": 1792611444,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "unitId": 3,
+      "file": "examples/agent-subunit-b.json",
+      "controller": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+      "frozen": false,
+      "latestVersion": 1,
+      "versions": [
+        {
+          "version": 1,
+          "boundaryHash": "0x78f868f803945994d1d90387a33054b051a0b3b3e9e2c11da7e0f4512c601530",
+          "descriptorURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/agent-subunit-b.json",
+          "publishedAt": 1792608960,
+          "contains": [],
+          "assertions": [
+            {
+              "assertionId": "0xade44dc148de65dd234dc2b9ef016269b291a834f61c3ac169b9ebd49a11a149",
+              "kind": "characterization",
+              "status": "active",
+              "byController": true,
+              "asserter": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+              "profileId": "0xa95ac67e63b0f953096f5b4b725cc52c051a6b6f9a0bb5d5eb8e9673c859ed48",
+              "contentHash": "0x0c6265bc5b8b43c774ca6c7cf1d0919a9e4a3a6061867a2451b1b9e50a16796a",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/agent-subunit-b.characterization.json",
+              "assertedAt": 1792611456,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "unitId": 4,
+      "file": "examples/swarm-unit.json",
+      "controller": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+      "frozen": false,
+      "latestVersion": 1,
+      "versions": [
+        {
+          "version": 1,
+          "boundaryHash": "0xa99a57686d65b075b76e1b0d9a33866a6f4545801b7425491444e9af3d2e2b53",
+          "descriptorURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/swarm-unit.json",
+          "publishedAt": 1792608972,
+          "contains": [
+            {
+              "unitId": 2,
+              "version": 1
+            },
+            {
+              "unitId": 3,
+              "version": 1
+            }
+          ],
+          "assertions": [
+            {
+              "assertionId": "0xa670e2f28da7516cfa53ac04912e51728ebb8a167c531a6176abeb56505aa671",
+              "kind": "characterization",
+              "status": "active",
+              "byController": true,
+              "asserter": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+              "profileId": "0xa95ac67e63b0f953096f5b4b725cc52c051a6b6f9a0bb5d5eb8e9673c859ed48",
+              "contentHash": "0x2a7f76296f9bec201001d836b9d29e39b965b625247747ec458cd05185edfd15",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/swarm-unit.characterization.json",
+              "assertedAt": 1792611468,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000"
+            },
+            {
+              "assertionId": "0x316e1e62e9143c72a97e761ce69fdc025af9f7e18e0c3ac4359596bec5ee10fa",
+              "kind": "valuation",
+              "status": "active",
+              "byController": false,
+              "asserter": "0xB4Af5c659BC10Cd0766CF0508b1f1Db34236c5E5",
+              "profileId": "0x8da6d9f12fdcbd5651f304c51b4f5b96987f8cd55b7178844f5e0f55085bd007",
+              "contentHash": "0x3b31b6bab54b9a36f293f9f0e3452a803741f4526cb2748c4a72abf93cf40cf4",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/swarm-unit.valuation.net-equity.json",
+              "assertedAt": 1792611492,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "valuation": {
+                "methodId": "0x8da6d9f12fdcbd5651f304c51b4f5b96987f8cd55b7178844f5e0f55085bd007",
+                "interestId": "0x26910e4924975fae7c723c9d3b43f9fa35fd201589c70ac969fcad8860c5080d",
+                "assessmentBoundaryHash": "0xa99a57686d65b075b76e1b0d9a33866a6f4545801b7425491444e9af3d2e2b53",
+                "snapshotHash": "0x6bea02bebf9fc37cc4178205e2be91bfe6f7298e4a4db8d68d28f5faa181fd2e",
+                "resultKind": 1,
+                "decimals": 2,
+                "value": "7000",
+                "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+                "asOf": 1793491200,
+                "horizonEnd": 0
+              }
+            },
+            {
+              "assertionId": "0x549bb23399349baa4187fb3083eb1de4e3fd115e75d74a8b09450688f47a915a",
+              "kind": "valuation",
+              "status": "active",
+              "byController": false,
+              "asserter": "0xB4Af5c659BC10Cd0766CF0508b1f1Db34236c5E5",
+              "profileId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+              "contentHash": "0xd54c5498cd9cc31811e58d02f98f66aadc88e2f034f6729f44efc959a59a9570",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/swarm-unit.valuation.fulfillment-claim.json",
+              "assertedAt": 1792611504,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "valuation": {
+                "methodId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+                "interestId": "0x989be3bc1862293dec08c63370d60996b13d74c8e2f090519953aab0f114127c",
+                "assessmentBoundaryHash": "0xa99a57686d65b075b76e1b0d9a33866a6f4545801b7425491444e9af3d2e2b53",
+                "snapshotHash": "0xbd320bfd840b5c2342724cc3472c2c55d33ecc1f4e5c75704fdd4f20680b91fd",
+                "resultKind": 4,
+                "decimals": 2,
+                "value": "5455",
+                "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+                "asOf": 1793491200,
+                "horizonEnd": 1796083200
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "unitId": 5,
+      "file": "examples/task-conditional-settlement.json",
+      "controller": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+      "frozen": false,
+      "latestVersion": 1,
+      "versions": [
+        {
+          "version": 1,
+          "boundaryHash": "0x180a161873b49a0e49aeb207edfb2f659f9c33c22a6bea0201fb34897afcd312",
+          "descriptorURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/task-conditional-settlement.json",
+          "publishedAt": 1792608984,
+          "contains": [],
+          "assertions": [
+            {
+              "assertionId": "0xc518a87ab37ac421f055a49b150675eea9afcfd6820387fc7fdea4a36cb90846",
+              "kind": "characterization",
+              "status": "active",
+              "byController": true,
+              "asserter": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+              "profileId": "0xa95ac67e63b0f953096f5b4b725cc52c051a6b6f9a0bb5d5eb8e9673c859ed48",
+              "contentHash": "0xb77ae69088946d45830aa99a544ca70fc7c74d28f8b4cfb7f6adc4b378033d12",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/task-conditional-settlement.characterization.json",
+              "assertedAt": 1792611684,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000"
+            },
+            {
+              "assertionId": "0xdcc17633240f2d6c26ca32d4986ae18bcc574af577273d54c54463db30f111ee",
+              "kind": "valuation",
+              "status": "active",
+              "byController": false,
+              "asserter": "0xB4Af5c659BC10Cd0766CF0508b1f1Db34236c5E5",
+              "profileId": "0x8da6d9f12fdcbd5651f304c51b4f5b96987f8cd55b7178844f5e0f55085bd007",
+              "contentHash": "0x06321127698e3cceafe0b32ab18cebcf12c4b5f5b0cc7b705baafcf07c72bd4e",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/task-conditional-settlement.valuation.position.json",
+              "assertedAt": 1792611696,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "valuation": {
+                "methodId": "0x8da6d9f12fdcbd5651f304c51b4f5b96987f8cd55b7178844f5e0f55085bd007",
+                "interestId": "0x97e24563cb4d3f219f064399b5679c8d121df4a9a8b66073617079ff66c9bc2e",
+                "assessmentBoundaryHash": "0x180a161873b49a0e49aeb207edfb2f659f9c33c22a6bea0201fb34897afcd312",
+                "snapshotHash": "0xb18de57df76d41416f96b5df20401986b111e4d8a68302c7ffd79c559da2c05c",
+                "resultKind": 1,
+                "decimals": 2,
+                "value": "10000",
+                "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+                "asOf": 1793491200,
+                "horizonEnd": 0
+              }
+            },
+            {
+              "assertionId": "0x8c5229e52e1035fdf4567f5e65185e99af85b0b1c1a36355f3f442f3822cb832",
+              "kind": "valuation",
+              "status": "active",
+              "byController": false,
+              "asserter": "0xB4Af5c659BC10Cd0766CF0508b1f1Db34236c5E5",
+              "profileId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+              "contentHash": "0x753fbec3cae06c67e0a1c841f7b3aa11420f904d82383a230a8eba538505d99a",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/task-conditional-settlement.valuation.fulfillment-claim.json",
+              "assertedAt": 1792611708,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "valuation": {
+                "methodId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+                "interestId": "0x989be3bc1862293dec08c63370d60996b13d74c8e2f090519953aab0f114127c",
+                "assessmentBoundaryHash": "0x180a161873b49a0e49aeb207edfb2f659f9c33c22a6bea0201fb34897afcd312",
+                "snapshotHash": "0xb18de57df76d41416f96b5df20401986b111e4d8a68302c7ffd79c559da2c05c",
+                "resultKind": 4,
+                "decimals": 2,
+                "value": "5455",
+                "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+                "asOf": 1793491200,
+                "horizonEnd": 0
+              }
+            },
+            {
+              "assertionId": "0x70c8f01e0160528880e1a82d100beb1d43c7636bfcda0524fcc6dd20ddaf6d24",
+              "kind": "valuation",
+              "status": "active",
+              "byController": false,
+              "asserter": "0xB4Af5c659BC10Cd0766CF0508b1f1Db34236c5E5",
+              "profileId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+              "contentHash": "0xa349f1d6e01fb45b8f8467807625894a5362fdf9ca8553a03d7ef679ddc1fdd0",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/task-conditional-settlement.valuation.obligation.json",
+              "assertedAt": 1792611720,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "valuation": {
+                "methodId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+                "interestId": "0xc5d69d15a60f832594b142bcdfacf43cbac680da7de939e045ac438763c0d150",
+                "assessmentBoundaryHash": "0x180a161873b49a0e49aeb207edfb2f659f9c33c22a6bea0201fb34897afcd312",
+                "snapshotHash": "0xb18de57df76d41416f96b5df20401986b111e4d8a68302c7ffd79c559da2c05c",
+                "resultKind": 4,
+                "decimals": 2,
+                "value": "-5455",
+                "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+                "asOf": 1793491200,
+                "horizonEnd": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "unitId": 6,
+      "file": "examples/contingent-obligation-unit.json",
+      "controller": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+      "frozen": false,
+      "latestVersion": 1,
+      "versions": [
+        {
+          "version": 1,
+          "boundaryHash": "0x5c00d353a218fd49ae6c1e045df24f2048fbbd3416b81f1208af6d84de403c76",
+          "descriptorURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/contingent-obligation-unit.json",
+          "publishedAt": 1792608996,
+          "contains": [],
+          "assertions": [
+            {
+              "assertionId": "0xe8d503f5b1464e5ea9c23ee8333cef0f941423bde98a6650d1d0e37c4278313a",
+              "kind": "characterization",
+              "status": "active",
+              "byController": true,
+              "asserter": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+              "profileId": "0xa95ac67e63b0f953096f5b4b725cc52c051a6b6f9a0bb5d5eb8e9673c859ed48",
+              "contentHash": "0xfbe16578c9f155b4f241e4910bb12f2069cdf0b76cb8adcfed4921bd475aa3ac",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/contingent-obligation-unit.characterization.json",
+              "assertedAt": 1792611732,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000"
+            },
+            {
+              "assertionId": "0xf69fe8ab001795d636f682a6570b7a8540fe35fdaa3cdd04e24fe22bd5e90443",
+              "kind": "observation",
+              "status": "active",
+              "byController": false,
+              "asserter": "0xB4Af5c659BC10Cd0766CF0508b1f1Db34236c5E5",
+              "profileId": "0x72aa51a169997ba1c40d028c965c3b1300b2e30d62806c68cda7e7cab7e57f52",
+              "contentHash": "0x44256531b03972bbc15514a3b9252b68271cf9256380ab9ee41156baa1d14a6e",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/contingent-obligation-unit.observation.json",
+              "assertedAt": 1792611744,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "observation": {
+                "snapshotHash": "0x44256531b03972bbc15514a3b9252b68271cf9256380ab9ee41156baa1d14a6e",
+                "windowStart": 1790812800,
+                "windowEnd": 1793491199
+              }
+            },
+            {
+              "assertionId": "0x673205ee1816f054eb88b9ade1a44b6fc82b41c1e087fe0d550437bfb8aa17ba",
+              "kind": "valuation",
+              "status": "active",
+              "byController": false,
+              "asserter": "0xB4Af5c659BC10Cd0766CF0508b1f1Db34236c5E5",
+              "profileId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+              "contentHash": "0x6c6163696e80b220c7188c1504d32769a7fea75cce2adf9701b45d58824a6ca4",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/contingent-obligation-unit.valuation.obligation.json",
+              "assertedAt": 1792611756,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "valuation": {
+                "methodId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+                "interestId": "0xc5d69d15a60f832594b142bcdfacf43cbac680da7de939e045ac438763c0d150",
+                "assessmentBoundaryHash": "0x5c00d353a218fd49ae6c1e045df24f2048fbbd3416b81f1208af6d84de403c76",
+                "snapshotHash": "0x44256531b03972bbc15514a3b9252b68271cf9256380ab9ee41156baa1d14a6e",
+                "resultKind": 4,
+                "decimals": 2,
+                "value": "-3636",
+                "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+                "asOf": 1793491200,
+                "horizonEnd": 0
+              }
+            },
+            {
+              "assertionId": "0xbbc05f2d684f9ce4fbced5dc6638b4794dc0370d17e7ab0413366a264a07eef6",
+              "kind": "valuation",
+              "status": "active",
+              "byController": false,
+              "asserter": "0xB4Af5c659BC10Cd0766CF0508b1f1Db34236c5E5",
+              "profileId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+              "contentHash": "0xb363a9f9bd117353abddb4d15bb81e6523df9402f8c7afd845ff819ff3f6bf7c",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/contingent-obligation-unit.valuation.insufficient-evidence.json",
+              "assertedAt": 1792611780,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "valuation": {
+                "methodId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+                "interestId": "0xc5d69d15a60f832594b142bcdfacf43cbac680da7de939e045ac438763c0d150",
+                "assessmentBoundaryHash": "0x5c00d353a218fd49ae6c1e045df24f2048fbbd3416b81f1208af6d84de403c76",
+                "snapshotHash": "0x44256531b03972bbc15514a3b9252b68271cf9256380ab9ee41156baa1d14a6e",
+                "resultKind": 10,
+                "decimals": 0,
+                "value": "0",
+                "denominationId": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "asOf": 1793491200,
+                "horizonEnd": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "unitId": 7,
+      "file": "examples/agent-chip.json",
+      "controller": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+      "frozen": false,
+      "latestVersion": 1,
+      "versions": [
+        {
+          "version": 1,
+          "boundaryHash": "0x7d5667c7741640590c0b3ef8115e575923c9fbe67f5da841d1fec6eacaa8cd24",
+          "descriptorURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/agent-chip.json",
+          "publishedAt": 1792609008,
+          "contains": [],
+          "assertions": [
+            {
+              "assertionId": "0x960988656d223459b32b97d34e0907d417df65d6a24425fab8d8b117bb259c3e",
+              "kind": "characterization",
+              "status": "active",
+              "byController": true,
+              "asserter": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+              "profileId": "0xa95ac67e63b0f953096f5b4b725cc52c051a6b6f9a0bb5d5eb8e9673c859ed48",
+              "contentHash": "0x07f11bc0d34168c4dcd58c31b34e94fe21c1c4409c58b2a84bc1c17631d48bc5",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/agent-chip.characterization.json",
+              "assertedAt": 1792611948,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000"
+            },
+            {
+              "assertionId": "0x616cadb7ca23fdefbe09ba1027756feb2e4f53984390ca94177f60ca61acf8d8",
+              "kind": "observation",
+              "status": "active",
+              "byController": false,
+              "asserter": "0xB4Af5c659BC10Cd0766CF0508b1f1Db34236c5E5",
+              "profileId": "0x72aa51a169997ba1c40d028c965c3b1300b2e30d62806c68cda7e7cab7e57f52",
+              "contentHash": "0x708c0981f8731edcc698702bde01d9425b481ebc429ebc95d0b8cc2c9f68e1cf",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/agent-chip.observation.json",
+              "assertedAt": 1792611960,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "observation": {
+                "snapshotHash": "0x708c0981f8731edcc698702bde01d9425b481ebc429ebc95d0b8cc2c9f68e1cf",
+                "windowStart": 1790812800,
+                "windowEnd": 1793491199
+              }
+            },
+            {
+              "assertionId": "0x809ab2e85792da3244e2a26de0b1c27d7be276bde22c0ac06a94d0fca3614d97",
+              "kind": "valuation",
+              "status": "active",
+              "byController": false,
+              "asserter": "0xB4Af5c659BC10Cd0766CF0508b1f1Db34236c5E5",
+              "profileId": "0xc87ccdce9b29353f5516392f5dd0d505b373965910baa6e7e95b49431cf22d22",
+              "contentHash": "0xb49a19c3c40624ecc164b8119781fb088e3dcc2a557fb9cc8705d824557aa9f9",
+              "contentURI": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/examples/agent-chip.valuation.whole-dcf.json",
+              "assertedAt": 1792611972,
+              "validFrom": 0,
+              "validUntil": 0,
+              "supersedes": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "supersededBy": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "valuation": {
+                "methodId": "0xc87ccdce9b29353f5516392f5dd0d505b373965910baa6e7e95b49431cf22d22",
+                "interestId": "0x93b59c859e870e0bccceb6518099af0b1c3b96134f2ba940bd9e57426828a681",
+                "assessmentBoundaryHash": "0x7d5667c7741640590c0b3ef8115e575923c9fbe67f5da841d1fec6eacaa8cd24",
+                "snapshotHash": "0x708c0981f8731edcc698702bde01d9425b481ebc429ebc95d0b8cc2c9f68e1cf",
+                "resultKind": 1,
+                "decimals": 2,
+                "value": "11281",
+                "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+                "asOf": 1793491200,
+                "horizonEnd": 1798761599
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "descriptors": [
+    {
+      "descriptorHash": "0x51ac1ab7eca131d0073c7c03024471be2e6fb28313e9c07a031ba4312731e8d5",
+      "descriptorKind": "0xfee577c4dcef7dc5b99f98a66d162078bb1099aaca05288a945b56734184a876",
+      "uri": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/vectors/methods/realized-net-cash-flow.json",
+      "publisher": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+      "registeredAt": 1792608840,
+      "method": "realized-net-cash-flow"
+    },
+    {
+      "descriptorHash": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+      "descriptorKind": "0xfee577c4dcef7dc5b99f98a66d162078bb1099aaca05288a945b56734184a876",
+      "uri": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/vectors/methods/conditional-payoff.json",
+      "publisher": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+      "registeredAt": 1792608864,
+      "method": "conditional-payoff"
+    },
+    {
+      "descriptorHash": "0x8da6d9f12fdcbd5651f304c51b4f5b96987f8cd55b7178844f5e0f55085bd007",
+      "descriptorKind": "0xfee577c4dcef7dc5b99f98a66d162078bb1099aaca05288a945b56734184a876",
+      "uri": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/vectors/methods/net-equity.json",
+      "publisher": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+      "registeredAt": 1792608780,
+      "method": "net-equity"
+    },
+    {
+      "descriptorHash": "0xc87ccdce9b29353f5516392f5dd0d505b373965910baa6e7e95b49431cf22d22",
+      "descriptorKind": "0xfee577c4dcef7dc5b99f98a66d162078bb1099aaca05288a945b56734184a876",
+      "uri": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/vectors/methods/finite-horizon-dcf.json",
+      "publisher": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+      "registeredAt": 1792608852,
+      "method": "finite-horizon-dcf"
+    }
+  ],
+  "acknowledgments": [
+    {
+      "unitId": 4,
+      "version": 1,
+      "elementId": "0x4681400ed361b8de87b7db945dd639ba7f09e62caae7a6e1e23e18ccda7faeb5",
+      "kind": 1,
+      "account": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+      "acknowledgedAt": 1792612308
+    },
+    {
+      "unitId": 4,
+      "version": 1,
+      "elementId": "0x4681400ed361b8de87b7db945dd639ba7f09e62caae7a6e1e23e18ccda7faeb5",
+      "kind": 4,
+      "account": "0xb5CC58b287D6553a11F6E5F87f858a4ccF785b26",
+      "acknowledgedAt": 1792612320
+    }
+  ],
+  "domainSeparator": "0x6eeb0ada6dc2071384062d13dca835304b57fbee9b0768554a8c195544e1441e"
+}

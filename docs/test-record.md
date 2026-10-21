@@ -39,3 +39,9 @@ Chain id 11155111 on Anvil, descriptors served from a local HTTP server so that 
 | lifecycle | 5 (2 acknowledgments, superseding receipt, revocation by the evaluator, version 2 of Unit 1; on Anvil the pre-funded evaluator needed no gas transfer, on Sepolia one more transaction funds it) |
 
 Total 39 transactions; all phases "ONCHAIN EXECUTION COMPLETE & SUCCESSFUL"; resolver output as described above.
+
+## Sepolia evidence run (2026-10-21)
+
+Executed on Sepolia with the plan signed from the rehearsal (`tools/sepolia/sign-plan.js`) and relayed one transaction at a time with live gas estimates: 40 transactions (2 deploy, 11 register, 21 assert, 6 lifecycle including the gas transfer to the evaluator), blocks 11964286 to 11964613, every receipt status 1, 78,295,499 gas in total. Both registries are source-verified on Sourcify (runtime and creation match). The registry state read back at block 11964628 matches `deployments/sepolia/vectors/examples.json` on every field checked (7 Units, 8 versions, containment of Unit 4, 22 assertions with their cores, 4 descriptors, 2 acknowledgments, supersession and revocation on Unit 1, asserter nonces 7 and 15). Details in `docs/sepolia-evidence.md`; record in `deployments/sepolia.json` and `deployments/sepolia/state.json`.
+
+Observed gas on Sepolia against the Anvil rehearsal: deployments 6.95 M and 15.19 M (Anvil 1.0 M and 2.0 M); `registerDescriptor` 0.90 to 1.02 M (0.21 to 0.26 M); `registerUnit` 0.92 to 1.48 M (0.22 to 0.33 M); characterization 1.48 to 1.58 M (0.34 to 0.54 M); observation by signature 1.62 to 1.72 M (0.34 M); valuation receipt by signature 2.18 to 2.63 M (0.38 to 0.59 M); acknowledgment 134 k (52 k); revoke 32 k (31 k); plain value transfer to a new account 205 k (21 k). The first deployment attempt with twice the Anvil figure ran out of gas; all later limits came from live estimates.

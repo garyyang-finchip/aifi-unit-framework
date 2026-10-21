@@ -1,0 +1,55 @@
+{
+  "auf": "1.0",
+  "kind": "valuation",
+  "subject": {
+    "registry": "eip155:11155111:0xe4ecaf6f87a700962f33aaa1a8f4b8e02fa180f8",
+    "unitId": 6,
+    "version": 1,
+    "boundaryHash": "0x5c00d353a218fd49ae6c1e045df24f2048fbbd3416b81f1208af6d84de403c76"
+  },
+  "assessmentBoundary": {
+    "hash": "0x5c00d353a218fd49ae6c1e045df24f2048fbbd3416b81f1208af6d84de403c76"
+  },
+  "interest": {
+    "id": "auf:interest:obligation@1",
+    "perspective": "analyst"
+  },
+  "snapshot": {
+    "asOf": "2026-11-01T00:00:00Z",
+    "hash": "0x44256531b03972bbc15514a3b9252b68271cf9256380ab9ee41156baa1d14a6e"
+  },
+  "method": {
+    "id": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+    "name": "auf:method:conditional-payoff@1",
+    "params": {
+      "denomination": "USD",
+      "rate": "0.1",
+      "periods": 1,
+      "probabilityBasis": "estimated",
+      "costsIncluded": true
+    }
+  },
+  "inputs": {
+    "data": [
+      {
+        "element": "0x30d31b8609616f3149398ad2c407ba3eb6b938d0839bc73bdd9d37587df24884"
+      }
+    ],
+    "missing": [
+      {
+        "item": "failure probability",
+        "reason": "no history of the worker available to this evaluator"
+      }
+    ],
+    "coverage": "trigger amount only"
+  },
+  "result": {
+    "kind": "insufficient-evidence",
+    "reason": "the failure probability cannot be estimated from the evidence available; the obligation is not valued at zero",
+    "missing": [
+      "failure probability"
+    ]
+  },
+  "evaluator": "eip155:11155111:0x00000000000000000000000000000000000000a8",
+  "notes": "Exception vector \"Missing evidence\": missing inputs produce insufficient-evidence, never a zero value."
+}

@@ -2,7 +2,7 @@
 
 Reference repository of the draft ERC **AIFi Unit Framework**: a registry and descriptor model through which any economic object in an AI-driven economy (a running agent, a static skill, a task with escrowed funds, a model license, a compute quota, a data right, a capital position, or any composition of these, including agent swarms) is named, bounded, described, observed, classified and valued as one whole.
 
-Status: Draft text ready for filing (placeholder number 9999). Discussion thread: https://ethereum-magicians.org/t/draft-erc-aifi-unit-framework-auf-boundary-roles-and-valuation-statements-for-ai-economic-units/30040. Reference implementation, schemas, vectors and worked examples are complete; the Sepolia evidence run is prepared (see below).
+Status: Draft filed as ethereum/ERCs pull request #2095 (placeholder number 9999 until an editor assigns one). Discussion thread: https://ethereum-magicians.org/t/draft-erc-aifi-unit-framework-auf-boundary-roles-and-valuation-statements-for-ai-economic-units/30040. Reference implementation, schemas, vectors and worked examples are complete; the Sepolia evidence run is executed and recorded (see below).
 
 ## What it is
 
@@ -30,8 +30,11 @@ assets/erc-auf/
 test/                                Foundry suite (57 tests) incl. ethers <-> solc vector cross-checks
 tools/                               build-examples.js, vectors.js, validate.js, resolve.js, lint-erc.js
 script/SepoliaEvidence.s.sol         four-phase evidence run (deploy, register, assert, lifecycle)
+tools/sepolia/sign-plan.js           turns the rehearsal's broadcast records into signed transactions for a relay
+deployments/                         sepolia.json (run record), sepolia/ (published descriptors, decoded state)
 scripts/make-filing-package.py       builds ercs-pr-package/ for the ethereum/ERCs pull request
-docs/                                design memo, financial-circuit profile, Magicians post, test record, runbook
+docs/                                design memo, financial-circuit profile, Magicians post, test record,
+                                     Sepolia runbook and evidence record
 ```
 
 ## Build and test
@@ -92,13 +95,19 @@ The role vocabulary and the financial-circuit analysis profile come from the aut
 
 ## Sepolia deployment
 
-Prepared, not yet executed. The evidence run (`script/SepoliaEvidence.s.sol`, rehearsed end to end on a local chain: 39 transactions) deploys both registries, registers the four method descriptors and the seven example Units, records controller characterizations and signed third-party observations and receipts, and then demonstrates acknowledgments, supersession, revocation and a second version. Addresses, transactions and the resolver output will be recorded in `deployments/` and `docs/sepolia-evidence.md`.
+Executed on 21 October 2026 (blocks 11964286 to 11964613, 40 transactions, all successful). The evidence run (`script/SepoliaEvidence.s.sol`) deploys both registries, registers the four method descriptors and the seven example Units, records controller characterizations and signed third-party observations and receipts, and then demonstrates acknowledgments, supersession, revocation and a second version.
+
+| Contract | Sepolia address | Source |
+|---|---|---|
+| `AUFUnitRegistry` | `0xE4EcAf6f87A700962f33AAa1A8f4B8e02FA180f8` | [Sourcify](https://repo.sourcify.dev/11155111/0xE4EcAf6f87A700962f33AAa1A8f4B8e02FA180f8), [Etherscan](https://sepolia.etherscan.io/address/0xE4EcAf6f87A700962f33AAa1A8f4B8e02FA180f8) |
+| `AUFAssertionRegistry` | `0xC4f30AfAFFC9E5a7bDEd58c411B87ABe3FBbEd00` | [Sourcify](https://repo.sourcify.dev/11155111/0xC4f30AfAFFC9E5a7bDEd58c411B87ABe3FBbEd00), [Etherscan](https://sepolia.etherscan.io/address/0xC4f30AfAFFC9E5a7bDEd58c411B87ABe3FBbEd00) |
+
+The full record (every transaction, the decoded registry state, the descriptors the on-chain URIs point to) is in `docs/sepolia-evidence.md`, `deployments/sepolia.json` and `deployments/sepolia/`. Unit 4 (the swarm) can be resolved from the chain with `node tools/resolve.js --rpc <sepolia rpc> --registry 0xE4EcAf6f87A700962f33AAa1A8f4B8e02FA180f8 --assertions 0xC4f30AfAFFC9E5a7bDEd58c411B87ABe3FBbEd00 --unit 4`.
 
 ## Next steps
 
-1. Build the filing package and open the ethereum/ERCs pull request from a branch cut from upstream master (the Magicians thread is posted and `discussions-to` is set).
-2. Run the Sepolia evidence phases and record the evidence.
-3. Collect review feedback on the thread and iterate.
+1. Collect review feedback on the Magicians thread and the pull request and iterate.
+2. When an editor assigns a number, rename `ERCS/erc-auf.md` and `assets/erc-auf/` to that number and rebuild the filing package with `scripts/make-filing-package.py --number <n>`.
 
 ## License
 

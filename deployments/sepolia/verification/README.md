@@ -1,0 +1,3 @@
+# Source verification inputs
+
+Solidity standard JSON inputs that reproduce the deployed bytecode of both registries exactly (solc 0.8.30+commit.73712a01, optimizer 200 runs, EVM version cancun, metadata bytecode hash none). They were used for the Sourcify verification recorded in docs/sepolia-evidence.md and can be submitted as-is to any explorer that accepts standard JSON input (contract names `AUFUnitRegistry` in `assets/erc-auf/contracts/AUFUnitRegistry.sol` and `AUFAssertionRegistry` in `assets/erc-auf/contracts/AUFAssertionRegistry.sol`; the assertion registry constructor argument is the unit registry address).

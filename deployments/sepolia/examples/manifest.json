@@ -1,0 +1,456 @@
+{
+  "chainId": 11155111,
+  "registry": "0xe4ecaf6f87a700962f33aaa1a8f4b8e02fa180f8",
+  "controllerOverride": "0xb5cc58b287d6553a11f6e5f87f858a4ccf785b26",
+  "descriptorBase": "https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/",
+  "note": "Planned registration order; unitIds are assigned sequentially by the Unit Registry.",
+  "methods": {
+    "netEquity": "0x8da6d9f12fdcbd5651f304c51b4f5b96987f8cd55b7178844f5e0f55085bd007",
+    "realized": "0x51ac1ab7eca131d0073c7c03024471be2e6fb28313e9c07a031ba4312731e8d5",
+    "dcf": "0xc87ccdce9b29353f5516392f5dd0d505b373965910baa6e7e95b49431cf22d22",
+    "conditional": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f"
+  },
+  "units": [
+    {
+      "unitId": 1,
+      "name": "Summarizer Skill Business",
+      "file": "skill-multi-license.json",
+      "boundaryHash": "0x23fb803a842d4839137c8ac30df5b6a7fd65b738707b578d60336a56572a97f9",
+      "contains": [],
+      "elements": {
+        "Summarizer skill package v3 (token-bound executable skill)": "0x3f13ce02d4a85ecacba5b5a5e6658105bf3f9208088d43b2d394a1c1ca00d656",
+        "Invocation endpoint of the skill": "0x590b6caa3dc99f05fa3fb9ad3a3d501b8cb9f54cefa7ec0cb23e39dfd93e94c4",
+        "Licensee A": "0xfcbebbecff638c8597fb0db7b30f0b9170d462dd1e26974e337738d06de72ac7",
+        "Licensee B": "0x152142c5905bfb5c906be56b4b1f0dc0cbb461d32d8a94178172f0f12afa4d97",
+        "Licensee C": "0x4681400ed361b8de87b7db945dd639ba7f09e62caae7a6e1e23e18ccda7faeb5",
+        "License fee receivable from A": "0x7edb5c93b1a992d1ed031f45cb31d3099eb21ff20d4ee4cb968708d646b46aaa",
+        "License fee receivable from B": "0x9a3da9b87afac074bd561dc6f28ef12130f1a5ef99e085630be769826da9499e",
+        "License fee receivable from C": "0xe3d73cda65ffb378581c8e6ec40129b65ec251a0b938feb2fcaf1bbb3b5b7b6b",
+        "Hosting invoice payable": "0x7866a0f7476ff5de045940017d6d428c6d1fd8be077a1fd8af1f811d07fb0542",
+        "Treasury account (stable balance)": "0x1e753103d4a6e1908f5d7fb776a3b24e2b1b38a02165709adbdfd25bc34f6c1e"
+      },
+      "controller": "0xb5cc58b287d6553a11f6e5f87f858a4ccf785b26",
+      "v2": {
+        "file": "skill-multi-license.v2.json",
+        "boundaryHash": "0x00df32a0a95943716d299bd6d28e6939bedae2b80f2a3728745e2b33f997e133"
+      },
+      "companions": [
+        {
+          "file": "skill-multi-license.characterization.json",
+          "kind": "characterization",
+          "contentHash": "0xe60bbe0d519c6e5af8811426b23ece6f19e5ee065b0940ccbbd604d7d9bbb934",
+          "profile": "auf:characterization:v1@1"
+        },
+        {
+          "file": "skill-multi-license.observation.json",
+          "kind": "observation",
+          "contentHash": "0x40b2d9efc91b1885a7e4552e18281858a99b65c0a7f1453ca6dbba21b83fc900",
+          "profile": "auf:observation:v1@1",
+          "core": {
+            "snapshotHash": "0x40b2d9efc91b1885a7e4552e18281858a99b65c0a7f1453ca6dbba21b83fc900",
+            "windowStart": 1790812800,
+            "windowEnd": 1793491199
+          }
+        },
+        {
+          "file": "skill-multi-license.valuation.realized-net-cash-flow.json",
+          "kind": "valuation",
+          "contentHash": "0xa66ab3160810e2cd59e368b0c957461515af3530954ac6a5e1af2b25db4804db",
+          "profile": "auf:method:realized-net-cash-flow@1",
+          "core": {
+            "methodId": "0x51ac1ab7eca131d0073c7c03024471be2e6fb28313e9c07a031ba4312731e8d5",
+            "interestId": "0x93b59c859e870e0bccceb6518099af0b1c3b96134f2ba940bd9e57426828a681",
+            "assessmentBoundaryHash": "0x23fb803a842d4839137c8ac30df5b6a7fd65b738707b578d60336a56572a97f9",
+            "snapshotHash": "0x40b2d9efc91b1885a7e4552e18281858a99b65c0a7f1453ca6dbba21b83fc900",
+            "resultKind": 1,
+            "decimals": 2,
+            "value": "6500",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491199,
+            "horizonEnd": 1793491199
+          }
+        },
+        {
+          "file": "skill-multi-license.valuation.net-equity.json",
+          "kind": "valuation",
+          "contentHash": "0x18f753bdbab7b0843455be83d732254d10c087071dee87fb474cdbf3b1c0d657",
+          "profile": "auf:method:net-equity@1",
+          "core": {
+            "methodId": "0x8da6d9f12fdcbd5651f304c51b4f5b96987f8cd55b7178844f5e0f55085bd007",
+            "interestId": "0x26910e4924975fae7c723c9d3b43f9fa35fd201589c70ac969fcad8860c5080d",
+            "assessmentBoundaryHash": "0x23fb803a842d4839137c8ac30df5b6a7fd65b738707b578d60336a56572a97f9",
+            "snapshotHash": "0x40b2d9efc91b1885a7e4552e18281858a99b65c0a7f1453ca6dbba21b83fc900",
+            "resultKind": 1,
+            "decimals": 2,
+            "value": "7000",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 0
+          }
+        },
+        {
+          "file": "skill-multi-license.valuation.revenue-right-dcf.json",
+          "kind": "valuation",
+          "contentHash": "0x570ac4893ab7a287a6e3203c2ee3604001b2fb92810b49fcbc9b53faf44f840f",
+          "profile": "auf:method:finite-horizon-dcf@1",
+          "core": {
+            "methodId": "0xc87ccdce9b29353f5516392f5dd0d505b373965910baa6e7e95b49431cf22d22",
+            "interestId": "0x4c1b68016dc3f594b00ab3dbca10785549b6647f31fa8461a12d1f4e73f927d1",
+            "assessmentBoundaryHash": "0x23fb803a842d4839137c8ac30df5b6a7fd65b738707b578d60336a56572a97f9",
+            "snapshotHash": "0x40b2d9efc91b1885a7e4552e18281858a99b65c0a7f1453ca6dbba21b83fc900",
+            "resultKind": 1,
+            "decimals": 2,
+            "value": "11281",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 1798761599
+          }
+        }
+      ]
+    },
+    {
+      "unitId": 2,
+      "name": "Agent A sub-unit",
+      "file": "agent-subunit-a.json",
+      "boundaryHash": "0x0bb7be9ed144dd4a8aec9b71a3b2c3a3520bafdbd63cb214bcef91ca20f00b82",
+      "contains": [],
+      "elements": {
+        "Agent A": "0xfcbebbecff638c8597fb0db7b30f0b9170d462dd1e26974e337738d06de72ac7",
+        "Summarizer skill (shared license)": "0x3f13ce02d4a85ecacba5b5a5e6658105bf3f9208088d43b2d394a1c1ca00d656",
+        "Treasury of agent A": "0x5aeb2b65744761bc79f18d40baf69f03221c2bea775b751a434d115224ebb408"
+      },
+      "controller": "0xb5cc58b287d6553a11f6e5f87f858a4ccf785b26",
+      "companions": [
+        {
+          "file": "agent-subunit-a.characterization.json",
+          "kind": "characterization",
+          "contentHash": "0xa734c56d3d4f2848266ba3d681b52321ad651f4633e59da046e0d64dbdc1fe14",
+          "profile": "auf:characterization:v1@1"
+        }
+      ]
+    },
+    {
+      "unitId": 3,
+      "name": "Agent B sub-unit",
+      "file": "agent-subunit-b.json",
+      "boundaryHash": "0x78f868f803945994d1d90387a33054b051a0b3b3e9e2c11da7e0f4512c601530",
+      "contains": [],
+      "elements": {
+        "Agent B": "0x152142c5905bfb5c906be56b4b1f0dc0cbb461d32d8a94178172f0f12afa4d97",
+        "Summarizer skill (shared license)": "0x3f13ce02d4a85ecacba5b5a5e6658105bf3f9208088d43b2d394a1c1ca00d656",
+        "Treasury of agent B": "0x874beddf623c4cd0d40c852a94b7a71026c468d2c29c6d933aaf2bc24387be54"
+      },
+      "controller": "0xb5cc58b287d6553a11f6e5f87f858a4ccf785b26",
+      "companions": [
+        {
+          "file": "agent-subunit-b.characterization.json",
+          "kind": "characterization",
+          "contentHash": "0x0c6265bc5b8b43c774ca6c7cf1d0919a9e4a3a6061867a2451b1b9e50a16796a",
+          "profile": "auf:characterization:v1@1"
+        }
+      ]
+    },
+    {
+      "unitId": 4,
+      "name": "Research Swarm Alpha (economic boundary)",
+      "file": "swarm-unit.json",
+      "boundaryHash": "0xa99a57686d65b075b76e1b0d9a33866a6f4545801b7425491444e9af3d2e2b53",
+      "contains": [
+        {
+          "unitId": 2,
+          "version": 1
+        },
+        {
+          "unitId": 3,
+          "version": 1
+        }
+      ],
+      "elements": {
+        "Swarm registry record (organizational boundary)": "0x32e51ccf6fefc6b86ea5827cb99b67b7616c60cf45d87a2d9a58e0e2afe0b0b4",
+        "Agent A sub-unit, version 1": "0xc0ffd7741415b894f0650566e301d73b649fc9bc87784da9a57350f84ccc75e0",
+        "Agent B sub-unit, version 1": "0x521eaf214846af4a66d857b0385a3d31b4645147368e15aa5c030dce15efdb35",
+        "Coordinator agent C": "0x4681400ed361b8de87b7db945dd639ba7f09e62caae7a6e1e23e18ccda7faeb5",
+        "External frontier model (API access only)": "0xe8c3cf60551907b7311c40afa1cecf3f98c7ad14ef1fc404fd09206d32ac14fe",
+        "Model subscription payable for November": "0xae4d10a2fb26cc2c1ac00e8cec50f6095d51cb9ca35040c8439d9f98b7164c13",
+        "Task tender 17 (translation corpus), accepted by the swarm": "0x7f20c153c6f7cfbaaaea42173b10f6ab6d53f30bc343f0485b4404100be1ddb1",
+        "Swarm treasury (swarm account)": "0xe8c8cde00958908af6b3dfdd061eb686f88e1db5cf025111c86f67110149443e"
+      },
+      "controller": "0xb5cc58b287d6553a11f6e5f87f858a4ccf785b26",
+      "companions": [
+        {
+          "file": "swarm-unit.characterization.json",
+          "kind": "characterization",
+          "contentHash": "0x2a7f76296f9bec201001d836b9d29e39b965b625247747ec458cd05185edfd15",
+          "profile": "auf:characterization:v1@1"
+        },
+        {
+          "file": "swarm-unit.valuation.net-equity.json",
+          "kind": "valuation",
+          "contentHash": "0x3b31b6bab54b9a36f293f9f0e3452a803741f4526cb2748c4a72abf93cf40cf4",
+          "profile": "auf:method:net-equity@1",
+          "core": {
+            "methodId": "0x8da6d9f12fdcbd5651f304c51b4f5b96987f8cd55b7178844f5e0f55085bd007",
+            "interestId": "0x26910e4924975fae7c723c9d3b43f9fa35fd201589c70ac969fcad8860c5080d",
+            "assessmentBoundaryHash": "0xa99a57686d65b075b76e1b0d9a33866a6f4545801b7425491444e9af3d2e2b53",
+            "snapshotHash": "0x6bea02bebf9fc37cc4178205e2be91bfe6f7298e4a4db8d68d28f5faa181fd2e",
+            "resultKind": 1,
+            "decimals": 2,
+            "value": "7000",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 0
+          }
+        },
+        {
+          "file": "swarm-unit.valuation.fulfillment-claim.json",
+          "kind": "valuation",
+          "contentHash": "0xd54c5498cd9cc31811e58d02f98f66aadc88e2f034f6729f44efc959a59a9570",
+          "profile": "auf:method:conditional-payoff@1",
+          "core": {
+            "methodId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+            "interestId": "0x989be3bc1862293dec08c63370d60996b13d74c8e2f090519953aab0f114127c",
+            "assessmentBoundaryHash": "0xa99a57686d65b075b76e1b0d9a33866a6f4545801b7425491444e9af3d2e2b53",
+            "snapshotHash": "0xbd320bfd840b5c2342724cc3472c2c55d33ecc1f4e5c75704fdd4f20680b91fd",
+            "resultKind": 4,
+            "decimals": 2,
+            "value": "5455",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 1796083200
+          }
+        }
+      ]
+    },
+    {
+      "unitId": 5,
+      "name": "Task 17: translated corpus (conditional settlement)",
+      "file": "task-conditional-settlement.json",
+      "boundaryHash": "0x180a161873b49a0e49aeb207edfb2f659f9c33c22a6bea0201fb34897afcd312",
+      "contains": [],
+      "elements": {
+        "Task tender 17 (translation corpus)": "0x7f20c153c6f7cfbaaaea42173b10f6ab6d53f30bc343f0485b4404100be1ddb1",
+        "Escrowed bounty held by the tender": "0xcd5cb00e788e869b9d22d63f40b2c9ede7c7af2f0ce4aff031d717f7317551b0",
+        "Buyer (tender creator and funder)": "0xc7bb547165f109b0684969a62fdf1f8df8252cdb44134499298bfd4394ba6e0a",
+        "Worker (accepted fulfiller)": "0x8cc9e1e24c33f29535cdcaec0e10455cf448a37d8f044192ac1557501f45ba19",
+        "Acceptance authority": "0xdaf6254620abe001082bf3066a11d6a6f1adedd33a311cd22ae3565163cd7c3c",
+        "Deliverable (translated corpus)": "0xb7fc3da5b279228e2c9e999931d67656f6a1046e5e2a824f2661569e09b8c051"
+      },
+      "controller": "0xb5cc58b287d6553a11f6e5f87f858a4ccf785b26",
+      "companions": [
+        {
+          "file": "task-conditional-settlement.characterization.json",
+          "kind": "characterization",
+          "contentHash": "0xb77ae69088946d45830aa99a544ca70fc7c74d28f8b4cfb7f6adc4b378033d12",
+          "profile": "auf:characterization:v1@1"
+        },
+        {
+          "file": "task-conditional-settlement.valuation.position.json",
+          "kind": "valuation",
+          "contentHash": "0x06321127698e3cceafe0b32ab18cebcf12c4b5f5b0cc7b705baafcf07c72bd4e",
+          "profile": "auf:method:net-equity@1",
+          "core": {
+            "methodId": "0x8da6d9f12fdcbd5651f304c51b4f5b96987f8cd55b7178844f5e0f55085bd007",
+            "interestId": "0x97e24563cb4d3f219f064399b5679c8d121df4a9a8b66073617079ff66c9bc2e",
+            "assessmentBoundaryHash": "0x180a161873b49a0e49aeb207edfb2f659f9c33c22a6bea0201fb34897afcd312",
+            "snapshotHash": "0xb18de57df76d41416f96b5df20401986b111e4d8a68302c7ffd79c559da2c05c",
+            "resultKind": 1,
+            "decimals": 2,
+            "value": "10000",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 0
+          }
+        },
+        {
+          "file": "task-conditional-settlement.valuation.fulfillment-claim.json",
+          "kind": "valuation",
+          "contentHash": "0x753fbec3cae06c67e0a1c841f7b3aa11420f904d82383a230a8eba538505d99a",
+          "profile": "auf:method:conditional-payoff@1",
+          "core": {
+            "methodId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+            "interestId": "0x989be3bc1862293dec08c63370d60996b13d74c8e2f090519953aab0f114127c",
+            "assessmentBoundaryHash": "0x180a161873b49a0e49aeb207edfb2f659f9c33c22a6bea0201fb34897afcd312",
+            "snapshotHash": "0xb18de57df76d41416f96b5df20401986b111e4d8a68302c7ffd79c559da2c05c",
+            "resultKind": 4,
+            "decimals": 2,
+            "value": "5455",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 0
+          }
+        },
+        {
+          "file": "task-conditional-settlement.valuation.obligation.json",
+          "kind": "valuation",
+          "contentHash": "0xa349f1d6e01fb45b8f8467807625894a5362fdf9ca8553a03d7ef679ddc1fdd0",
+          "profile": "auf:method:conditional-payoff@1",
+          "core": {
+            "methodId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+            "interestId": "0xc5d69d15a60f832594b142bcdfacf43cbac680da7de939e045ac438763c0d150",
+            "assessmentBoundaryHash": "0x180a161873b49a0e49aeb207edfb2f659f9c33c22a6bea0201fb34897afcd312",
+            "snapshotHash": "0xb18de57df76d41416f96b5df20401986b111e4d8a68302c7ffd79c559da2c05c",
+            "resultKind": 4,
+            "decimals": 2,
+            "value": "-5455",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitId": 6,
+      "name": "Performance guarantee for task 17",
+      "file": "contingent-obligation-unit.json",
+      "boundaryHash": "0x5c00d353a218fd49ae6c1e045df24f2048fbbd3416b81f1208af6d84de403c76",
+      "contains": [],
+      "elements": {
+        "Performance guarantee for task 17 (pays the buyer 100 if the worker fails)": "0x30d31b8609616f3149398ad2c407ba3eb6b938d0839bc73bdd9d37587df24884",
+        "Guaranteed task": "0x7f20c153c6f7cfbaaaea42173b10f6ab6d53f30bc343f0485b4404100be1ddb1",
+        "Beneficiary of the guarantee": "0xc7bb547165f109b0684969a62fdf1f8df8252cdb44134499298bfd4394ba6e0a"
+      },
+      "controller": "0xb5cc58b287d6553a11f6e5f87f858a4ccf785b26",
+      "companions": [
+        {
+          "file": "contingent-obligation-unit.characterization.json",
+          "kind": "characterization",
+          "contentHash": "0xfbe16578c9f155b4f241e4910bb12f2069cdf0b76cb8adcfed4921bd475aa3ac",
+          "profile": "auf:characterization:v1@1"
+        },
+        {
+          "file": "contingent-obligation-unit.observation.json",
+          "kind": "observation",
+          "contentHash": "0x44256531b03972bbc15514a3b9252b68271cf9256380ab9ee41156baa1d14a6e",
+          "profile": "auf:observation:v1@1",
+          "core": {
+            "snapshotHash": "0x44256531b03972bbc15514a3b9252b68271cf9256380ab9ee41156baa1d14a6e",
+            "windowStart": 1790812800,
+            "windowEnd": 1793491199
+          }
+        },
+        {
+          "file": "contingent-obligation-unit.valuation.obligation.json",
+          "kind": "valuation",
+          "contentHash": "0x6c6163696e80b220c7188c1504d32769a7fea75cce2adf9701b45d58824a6ca4",
+          "profile": "auf:method:conditional-payoff@1",
+          "core": {
+            "methodId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+            "interestId": "0xc5d69d15a60f832594b142bcdfacf43cbac680da7de939e045ac438763c0d150",
+            "assessmentBoundaryHash": "0x5c00d353a218fd49ae6c1e045df24f2048fbbd3416b81f1208af6d84de403c76",
+            "snapshotHash": "0x44256531b03972bbc15514a3b9252b68271cf9256380ab9ee41156baa1d14a6e",
+            "resultKind": 4,
+            "decimals": 2,
+            "value": "-3636",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 0
+          }
+        },
+        {
+          "file": "contingent-obligation-unit.valuation.insufficient-evidence.json",
+          "kind": "valuation",
+          "contentHash": "0xb363a9f9bd117353abddb4d15bb81e6523df9402f8c7afd845ff819ff3f6bf7c",
+          "profile": "auf:method:conditional-payoff@1",
+          "core": {
+            "methodId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+            "interestId": "0xc5d69d15a60f832594b142bcdfacf43cbac680da7de939e045ac438763c0d150",
+            "assessmentBoundaryHash": "0x5c00d353a218fd49ae6c1e045df24f2048fbbd3416b81f1208af6d84de403c76",
+            "snapshotHash": "0x44256531b03972bbc15514a3b9252b68271cf9256380ab9ee41156baa1d14a6e",
+            "resultKind": 10,
+            "decimals": 0,
+            "value": "0",
+            "denominationId": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "asOf": 1793491200,
+            "horizonEnd": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitId": 7,
+      "name": "Agent OPC (one-person company)",
+      "file": "agent-chip.json",
+      "boundaryHash": "0x7d5667c7741640590c0b3ef8115e575923c9fbe67f5da841d1fec6eacaa8cd24",
+      "contains": [],
+      "elements": {
+        "Running agent (one-person company)": "0xb7c820fc7d1550ef8072731ae59c50d79f4dede020a312ba7243bdfe368be861",
+        "Owned skill: research pipeline": "0x0c39333d0cc44044c7acb3c2fd2ffabd360da97ba671aa7bdaaeddbdc2e59560",
+        "Licensed skill: summarizer": "0x3f13ce02d4a85ecacba5b5a5e6658105bf3f9208088d43b2d394a1c1ca00d656",
+        "Reserved GPU hours": "0xc70f576d20b3931b3a23e9d85488fc95edaf64dd8a58fc4c1d742877597fec97",
+        "Licensed corpus (access and use, no sublicensing)": "0xe07065716a8f9bd29c58ae75cae299ad4cb424583360db3b32a2f2311aa090cd",
+        "Treasury": "0x7f48dfe7185c4e6c3e03eb5e1a7da25375e69402e944f51f44454f0476a25e32",
+        "Human operator (policy control)": "0x5311b55f8393a6fdc8820a11ffcb2d43fa861315a338928d9ffb8f4b9e2ac244"
+      },
+      "controller": "0xb5cc58b287d6553a11f6e5f87f858a4ccf785b26",
+      "companions": [
+        {
+          "file": "agent-chip.characterization.json",
+          "kind": "characterization",
+          "contentHash": "0x07f11bc0d34168c4dcd58c31b34e94fe21c1c4409c58b2a84bc1c17631d48bc5",
+          "profile": "auf:characterization:v1@1"
+        },
+        {
+          "file": "agent-chip.observation.json",
+          "kind": "observation",
+          "contentHash": "0x708c0981f8731edcc698702bde01d9425b481ebc429ebc95d0b8cc2c9f68e1cf",
+          "profile": "auf:observation:v1@1",
+          "core": {
+            "snapshotHash": "0x708c0981f8731edcc698702bde01d9425b481ebc429ebc95d0b8cc2c9f68e1cf",
+            "windowStart": 1790812800,
+            "windowEnd": 1793491199
+          }
+        },
+        {
+          "file": "agent-chip.valuation.whole-dcf.json",
+          "kind": "valuation",
+          "contentHash": "0xb49a19c3c40624ecc164b8119781fb088e3dcc2a557fb9cc8705d824557aa9f9",
+          "profile": "auf:method:finite-horizon-dcf@1",
+          "core": {
+            "methodId": "0xc87ccdce9b29353f5516392f5dd0d505b373965910baa6e7e95b49431cf22d22",
+            "interestId": "0x93b59c859e870e0bccceb6518099af0b1c3b96134f2ba940bd9e57426828a681",
+            "assessmentBoundaryHash": "0x7d5667c7741640590c0b3ef8115e575923c9fbe67f5da841d1fec6eacaa8cd24",
+            "snapshotHash": "0x708c0981f8731edcc698702bde01d9425b481ebc429ebc95d0b8cc2c9f68e1cf",
+            "resultKind": 1,
+            "decimals": 2,
+            "value": "11281",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 1798761599
+          }
+        }
+      ]
+    }
+  ],
+  "files": [
+    "skill-multi-license.json",
+    "skill-multi-license.characterization.json",
+    "skill-multi-license.observation.json",
+    "skill-multi-license.valuation.realized-net-cash-flow.json",
+    "skill-multi-license.valuation.net-equity.json",
+    "skill-multi-license.valuation.revenue-right-dcf.json",
+    "skill-multi-license.v2.json",
+    "agent-subunit-a.json",
+    "agent-subunit-a.characterization.json",
+    "agent-subunit-b.json",
+    "agent-subunit-b.characterization.json",
+    "swarm-unit.json",
+    "swarm-unit.characterization.json",
+    "swarm-unit.valuation.net-equity.json",
+    "swarm-unit.valuation.fulfillment-claim.json",
+    "task-conditional-settlement.json",
+    "task-conditional-settlement.characterization.json",
+    "task-conditional-settlement.valuation.position.json",
+    "task-conditional-settlement.valuation.fulfillment-claim.json",
+    "task-conditional-settlement.valuation.obligation.json",
+    "contingent-obligation-unit.json",
+    "contingent-obligation-unit.characterization.json",
+    "contingent-obligation-unit.observation.json",
+    "contingent-obligation-unit.valuation.obligation.json",
+    "contingent-obligation-unit.valuation.insufficient-evidence.json",
+    "agent-chip.json",
+    "agent-chip.characterization.json",
+    "agent-chip.observation.json",
+    "agent-chip.valuation.whole-dcf.json"
+  ]
+}

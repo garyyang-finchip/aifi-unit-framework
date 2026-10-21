@@ -1,6 +1,6 @@
 # Sepolia evidence runbook
 
-The evidence run exercises the whole framework on Sepolia with the seven worked examples. It was rehearsed end to end on a local Anvil chain (39 transactions). Two keys take part:
+The evidence run exercises the whole framework on Sepolia with the seven worked examples. It was rehearsed end to end on a local Anvil chain (39 transactions) and then executed on Sepolia (40 transactions; see `docs/sepolia-evidence.md`). Two keys take part:
 
 - **Deployer / controller** (`PRIVATE_KEY`): deploys the registries, registers methods and Units, records controller characterizations, relays the evaluator's signed assertions, pays all gas.
 - **Evaluator** (`EVALUATOR_PK`): a third party; signs observations and valuation receipts off chain (EIP-712), and revokes one receipt itself (the deployer sends it a little ETH first).
@@ -66,3 +66,13 @@ node tools/resolve.js --rpc $SEPOLIA_RPC_URL --registry <unitRegistry> --asserti
 ```
 
 Record in `docs/sepolia-evidence.md`: addresses, deployer and evaluator, transaction hashes per phase (from `broadcast/`), the resolver output for Units 1 (both versions) and 4, and source verification (Sourcify or Etherscan) of both registries. Keep `deployments/sepolia.json` and copy the broadcast run files into `deployments/sepolia/`.
+
+## Alternative: sign from the rehearsal and relay
+
+When the machine holding the keys has no Sepolia RPC access, the run can be executed exactly as the recorded one was (`docs/sepolia-evidence.md`):
+
+1. Rehearse all four phases on Anvil started with `--chain-id 11155111`, the real deployer key at its Sepolia nonce (`anvil_setNonce`) and the real evaluator key, so that CREATE addresses, assertion ids and EIP-712 signatures match Sepolia. Serve the regenerated examples over HTTP for the rehearsal; on Sepolia the same files are served from the repository.
+2. `PRIVATE_KEY=... EVALUATOR_PK=... node tools/sepolia/sign-plan.js --out plan.json --gas-mult 8 --gas-overrides overrides.json` turns the broadcast records into signed EIP-1559 transactions in order. Gas limits should come from live `eth_estimateGas` on Sepolia (`--gas-overrides` takes `{"<index>": <limit>}`); a multiple of the Anvil figure is not a safe substitute.
+3. Any JSON-RPC relay sends `transactions[i].raw` in order with `eth_sendRawTransaction`, waits for each receipt and stops at the first failure. Re-signing one transaction with a higher limit keeps its nonce, so the rest of the plan stays valid.
+
+No private key leaves the signing machine; the relay only ever sees signed bytes.

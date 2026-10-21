@@ -1,0 +1,58 @@
+{
+  "auf": "1.0",
+  "kind": "valuation",
+  "subject": {
+    "registry": "eip155:11155111:0xe4ecaf6f87a700962f33aaa1a8f4b8e02fa180f8",
+    "unitId": 7,
+    "version": 1,
+    "boundaryHash": "0x7d5667c7741640590c0b3ef8115e575923c9fbe67f5da841d1fec6eacaa8cd24"
+  },
+  "assessmentBoundary": {
+    "hash": "0x7d5667c7741640590c0b3ef8115e575923c9fbe67f5da841d1fec6eacaa8cd24"
+  },
+  "interest": {
+    "id": "auf:interest:whole@1",
+    "perspective": "holder"
+  },
+  "snapshot": {
+    "asOf": "2026-11-01T00:00:00Z",
+    "hash": "0x708c0981f8731edcc698702bde01d9425b481ebc429ebc95d0b8cc2c9f68e1cf"
+  },
+  "method": {
+    "id": "0xc87ccdce9b29353f5516392f5dd0d505b373965910baa6e7e95b49431cf22d22",
+    "name": "auf:method:finite-horizon-dcf@1",
+    "params": {
+      "denomination": "USD",
+      "cashflows": [
+        "65",
+        "65"
+      ],
+      "rate": "0.1",
+      "terminalValue": "0",
+      "periodLength": "P30D",
+      "attribution": "net cash flow of the whole Unit"
+    }
+  },
+  "inputs": {
+    "data": [
+      {
+        "observation": "0x708c0981f8731edcc698702bde01d9425b481ebc429ebc95d0b8cc2c9f68e1cf"
+      }
+    ],
+    "estimates": [
+      "two periods repeating October"
+    ],
+    "coverage": "two periods, no terminal value, reserved compute not separately valued"
+  },
+  "result": {
+    "kind": "monetary",
+    "value": "112.81",
+    "denomination": "USD",
+    "decimals": 2
+  },
+  "horizon": {
+    "from": "2026-11-01T00:00:00Z",
+    "to": "2026-12-31T23:59:59Z"
+  },
+  "evaluator": "eip155:11155111:0x00000000000000000000000000000000000000ef"
+}

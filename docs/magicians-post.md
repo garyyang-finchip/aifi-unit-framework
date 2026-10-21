@@ -47,3 +47,16 @@ Two registries: `AUFUnitRegistry` (units, versions, containment, definition cont
 4. Acyclic containment by version pinning versus explicit cycle detection: are there compositions this rules out that should be allowed?
 
 Feedback welcome. The text is deliberately self-contained; bindings to the related proposals will deepen in later revisions.
+
+---
+
+## Reply 1: Sepolia evidence (to be posted after `deployments/` is on main)
+
+The Sepolia evidence run is done: 40 transactions, blocks 11964286 to 11964613, every receipt successful, both registries source-verified.
+
+- `AUFUnitRegistry`: `0xE4EcAf6f87A700962f33AAa1A8f4B8e02FA180f8` (Sourcify: https://repo.sourcify.dev/11155111/0xE4EcAf6f87A700962f33AAa1A8f4B8e02FA180f8)
+- `AUFAssertionRegistry`: `0xC4f30AfAFFC9E5a7bDEd58c411B87ABe3FBbEd00` (Sourcify: https://repo.sourcify.dev/11155111/0xC4f30AfAFFC9E5a7bDEd58c411B87ABe3FBbEd00)
+
+What is on chain: the four method descriptors, the seven worked Units (the swarm Unit 4 contains Units 2 and 3 at pinned version 1), seven controller characterizations, three observations and eleven valuation receipts signed by a separate evaluator key and relayed through `assertStatementBySig`, two typed acknowledgments, one superseding receipt, one revocation sent by the evaluator itself, and version 2 of Unit 1 (its version-1 receipts do not carry over). The state read back from the registries matches the published descriptors field by field.
+
+Record: https://github.com/garyyang-finchip/aifi-unit-framework/blob/main/docs/sepolia-evidence.md (transactions, decoded state, how to re-run the resolver against the chain). ERC pull request: https://github.com/ethereum/ERCs/pull/2095.

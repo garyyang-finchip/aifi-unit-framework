@@ -1,0 +1,355 @@
+{
+  "registry": "0xe4ecaf6f87a700962f33aaa1a8f4b8e02fa180f8",
+  "chainId": 11155111,
+  "units": [
+    {
+      "unitId": 1,
+      "file": "examples/skill-multi-license.json",
+      "boundaryHash": "0x23fb803a842d4839137c8ac30df5b6a7fd65b738707b578d60336a56572a97f9",
+      "contains": [],
+      "controller": "0xb5cc58b287d6553a11f6e5f87f858a4ccf785b26",
+      "companions": [
+        {
+          "file": "skill-multi-license.characterization.json",
+          "kind": "characterization",
+          "contentHash": "0xe60bbe0d519c6e5af8811426b23ece6f19e5ee065b0940ccbbd604d7d9bbb934",
+          "profile": "auf:characterization:v1@1"
+        },
+        {
+          "file": "skill-multi-license.observation.json",
+          "kind": "observation",
+          "contentHash": "0x40b2d9efc91b1885a7e4552e18281858a99b65c0a7f1453ca6dbba21b83fc900",
+          "profile": "auf:observation:v1@1",
+          "core": {
+            "snapshotHash": "0x40b2d9efc91b1885a7e4552e18281858a99b65c0a7f1453ca6dbba21b83fc900",
+            "windowStart": 1790812800,
+            "windowEnd": 1793491199
+          }
+        },
+        {
+          "file": "skill-multi-license.valuation.realized-net-cash-flow.json",
+          "kind": "valuation",
+          "contentHash": "0xa66ab3160810e2cd59e368b0c957461515af3530954ac6a5e1af2b25db4804db",
+          "profile": "auf:method:realized-net-cash-flow@1",
+          "core": {
+            "methodId": "0x51ac1ab7eca131d0073c7c03024471be2e6fb28313e9c07a031ba4312731e8d5",
+            "interestId": "0x93b59c859e870e0bccceb6518099af0b1c3b96134f2ba940bd9e57426828a681",
+            "assessmentBoundaryHash": "0x23fb803a842d4839137c8ac30df5b6a7fd65b738707b578d60336a56572a97f9",
+            "snapshotHash": "0x40b2d9efc91b1885a7e4552e18281858a99b65c0a7f1453ca6dbba21b83fc900",
+            "resultKind": 1,
+            "decimals": 2,
+            "value": "6500",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491199,
+            "horizonEnd": 1793491199
+          }
+        },
+        {
+          "file": "skill-multi-license.valuation.net-equity.json",
+          "kind": "valuation",
+          "contentHash": "0x18f753bdbab7b0843455be83d732254d10c087071dee87fb474cdbf3b1c0d657",
+          "profile": "auf:method:net-equity@1",
+          "core": {
+            "methodId": "0x8da6d9f12fdcbd5651f304c51b4f5b96987f8cd55b7178844f5e0f55085bd007",
+            "interestId": "0x26910e4924975fae7c723c9d3b43f9fa35fd201589c70ac969fcad8860c5080d",
+            "assessmentBoundaryHash": "0x23fb803a842d4839137c8ac30df5b6a7fd65b738707b578d60336a56572a97f9",
+            "snapshotHash": "0x40b2d9efc91b1885a7e4552e18281858a99b65c0a7f1453ca6dbba21b83fc900",
+            "resultKind": 1,
+            "decimals": 2,
+            "value": "7000",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 0
+          }
+        },
+        {
+          "file": "skill-multi-license.valuation.revenue-right-dcf.json",
+          "kind": "valuation",
+          "contentHash": "0x570ac4893ab7a287a6e3203c2ee3604001b2fb92810b49fcbc9b53faf44f840f",
+          "profile": "auf:method:finite-horizon-dcf@1",
+          "core": {
+            "methodId": "0xc87ccdce9b29353f5516392f5dd0d505b373965910baa6e7e95b49431cf22d22",
+            "interestId": "0x4c1b68016dc3f594b00ab3dbca10785549b6647f31fa8461a12d1f4e73f927d1",
+            "assessmentBoundaryHash": "0x23fb803a842d4839137c8ac30df5b6a7fd65b738707b578d60336a56572a97f9",
+            "snapshotHash": "0x40b2d9efc91b1885a7e4552e18281858a99b65c0a7f1453ca6dbba21b83fc900",
+            "resultKind": 1,
+            "decimals": 2,
+            "value": "11281",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 1798761599
+          }
+        }
+      ],
+      "v2": {
+        "file": "examples/skill-multi-license.v2.json",
+        "boundaryHash": "0x00df32a0a95943716d299bd6d28e6939bedae2b80f2a3728745e2b33f997e133"
+      }
+    },
+    {
+      "unitId": 2,
+      "file": "examples/agent-subunit-a.json",
+      "boundaryHash": "0x0bb7be9ed144dd4a8aec9b71a3b2c3a3520bafdbd63cb214bcef91ca20f00b82",
+      "contains": [],
+      "controller": "0xb5cc58b287d6553a11f6e5f87f858a4ccf785b26",
+      "companions": [
+        {
+          "file": "agent-subunit-a.characterization.json",
+          "kind": "characterization",
+          "contentHash": "0xa734c56d3d4f2848266ba3d681b52321ad651f4633e59da046e0d64dbdc1fe14",
+          "profile": "auf:characterization:v1@1"
+        }
+      ]
+    },
+    {
+      "unitId": 3,
+      "file": "examples/agent-subunit-b.json",
+      "boundaryHash": "0x78f868f803945994d1d90387a33054b051a0b3b3e9e2c11da7e0f4512c601530",
+      "contains": [],
+      "controller": "0xb5cc58b287d6553a11f6e5f87f858a4ccf785b26",
+      "companions": [
+        {
+          "file": "agent-subunit-b.characterization.json",
+          "kind": "characterization",
+          "contentHash": "0x0c6265bc5b8b43c774ca6c7cf1d0919a9e4a3a6061867a2451b1b9e50a16796a",
+          "profile": "auf:characterization:v1@1"
+        }
+      ]
+    },
+    {
+      "unitId": 4,
+      "file": "examples/swarm-unit.json",
+      "boundaryHash": "0xa99a57686d65b075b76e1b0d9a33866a6f4545801b7425491444e9af3d2e2b53",
+      "contains": [
+        {
+          "unitId": 2,
+          "version": 1
+        },
+        {
+          "unitId": 3,
+          "version": 1
+        }
+      ],
+      "controller": "0xb5cc58b287d6553a11f6e5f87f858a4ccf785b26",
+      "companions": [
+        {
+          "file": "swarm-unit.characterization.json",
+          "kind": "characterization",
+          "contentHash": "0x2a7f76296f9bec201001d836b9d29e39b965b625247747ec458cd05185edfd15",
+          "profile": "auf:characterization:v1@1"
+        },
+        {
+          "file": "swarm-unit.valuation.net-equity.json",
+          "kind": "valuation",
+          "contentHash": "0x3b31b6bab54b9a36f293f9f0e3452a803741f4526cb2748c4a72abf93cf40cf4",
+          "profile": "auf:method:net-equity@1",
+          "core": {
+            "methodId": "0x8da6d9f12fdcbd5651f304c51b4f5b96987f8cd55b7178844f5e0f55085bd007",
+            "interestId": "0x26910e4924975fae7c723c9d3b43f9fa35fd201589c70ac969fcad8860c5080d",
+            "assessmentBoundaryHash": "0xa99a57686d65b075b76e1b0d9a33866a6f4545801b7425491444e9af3d2e2b53",
+            "snapshotHash": "0x6bea02bebf9fc37cc4178205e2be91bfe6f7298e4a4db8d68d28f5faa181fd2e",
+            "resultKind": 1,
+            "decimals": 2,
+            "value": "7000",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 0
+          }
+        },
+        {
+          "file": "swarm-unit.valuation.fulfillment-claim.json",
+          "kind": "valuation",
+          "contentHash": "0xd54c5498cd9cc31811e58d02f98f66aadc88e2f034f6729f44efc959a59a9570",
+          "profile": "auf:method:conditional-payoff@1",
+          "core": {
+            "methodId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+            "interestId": "0x989be3bc1862293dec08c63370d60996b13d74c8e2f090519953aab0f114127c",
+            "assessmentBoundaryHash": "0xa99a57686d65b075b76e1b0d9a33866a6f4545801b7425491444e9af3d2e2b53",
+            "snapshotHash": "0xbd320bfd840b5c2342724cc3472c2c55d33ecc1f4e5c75704fdd4f20680b91fd",
+            "resultKind": 4,
+            "decimals": 2,
+            "value": "5455",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 1796083200
+          }
+        }
+      ]
+    },
+    {
+      "unitId": 5,
+      "file": "examples/task-conditional-settlement.json",
+      "boundaryHash": "0x180a161873b49a0e49aeb207edfb2f659f9c33c22a6bea0201fb34897afcd312",
+      "contains": [],
+      "controller": "0xb5cc58b287d6553a11f6e5f87f858a4ccf785b26",
+      "companions": [
+        {
+          "file": "task-conditional-settlement.characterization.json",
+          "kind": "characterization",
+          "contentHash": "0xb77ae69088946d45830aa99a544ca70fc7c74d28f8b4cfb7f6adc4b378033d12",
+          "profile": "auf:characterization:v1@1"
+        },
+        {
+          "file": "task-conditional-settlement.valuation.position.json",
+          "kind": "valuation",
+          "contentHash": "0x06321127698e3cceafe0b32ab18cebcf12c4b5f5b0cc7b705baafcf07c72bd4e",
+          "profile": "auf:method:net-equity@1",
+          "core": {
+            "methodId": "0x8da6d9f12fdcbd5651f304c51b4f5b96987f8cd55b7178844f5e0f55085bd007",
+            "interestId": "0x97e24563cb4d3f219f064399b5679c8d121df4a9a8b66073617079ff66c9bc2e",
+            "assessmentBoundaryHash": "0x180a161873b49a0e49aeb207edfb2f659f9c33c22a6bea0201fb34897afcd312",
+            "snapshotHash": "0xb18de57df76d41416f96b5df20401986b111e4d8a68302c7ffd79c559da2c05c",
+            "resultKind": 1,
+            "decimals": 2,
+            "value": "10000",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 0
+          }
+        },
+        {
+          "file": "task-conditional-settlement.valuation.fulfillment-claim.json",
+          "kind": "valuation",
+          "contentHash": "0x753fbec3cae06c67e0a1c841f7b3aa11420f904d82383a230a8eba538505d99a",
+          "profile": "auf:method:conditional-payoff@1",
+          "core": {
+            "methodId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+            "interestId": "0x989be3bc1862293dec08c63370d60996b13d74c8e2f090519953aab0f114127c",
+            "assessmentBoundaryHash": "0x180a161873b49a0e49aeb207edfb2f659f9c33c22a6bea0201fb34897afcd312",
+            "snapshotHash": "0xb18de57df76d41416f96b5df20401986b111e4d8a68302c7ffd79c559da2c05c",
+            "resultKind": 4,
+            "decimals": 2,
+            "value": "5455",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 0
+          }
+        },
+        {
+          "file": "task-conditional-settlement.valuation.obligation.json",
+          "kind": "valuation",
+          "contentHash": "0xa349f1d6e01fb45b8f8467807625894a5362fdf9ca8553a03d7ef679ddc1fdd0",
+          "profile": "auf:method:conditional-payoff@1",
+          "core": {
+            "methodId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+            "interestId": "0xc5d69d15a60f832594b142bcdfacf43cbac680da7de939e045ac438763c0d150",
+            "assessmentBoundaryHash": "0x180a161873b49a0e49aeb207edfb2f659f9c33c22a6bea0201fb34897afcd312",
+            "snapshotHash": "0xb18de57df76d41416f96b5df20401986b111e4d8a68302c7ffd79c559da2c05c",
+            "resultKind": 4,
+            "decimals": 2,
+            "value": "-5455",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitId": 6,
+      "file": "examples/contingent-obligation-unit.json",
+      "boundaryHash": "0x5c00d353a218fd49ae6c1e045df24f2048fbbd3416b81f1208af6d84de403c76",
+      "contains": [],
+      "controller": "0xb5cc58b287d6553a11f6e5f87f858a4ccf785b26",
+      "companions": [
+        {
+          "file": "contingent-obligation-unit.characterization.json",
+          "kind": "characterization",
+          "contentHash": "0xfbe16578c9f155b4f241e4910bb12f2069cdf0b76cb8adcfed4921bd475aa3ac",
+          "profile": "auf:characterization:v1@1"
+        },
+        {
+          "file": "contingent-obligation-unit.observation.json",
+          "kind": "observation",
+          "contentHash": "0x44256531b03972bbc15514a3b9252b68271cf9256380ab9ee41156baa1d14a6e",
+          "profile": "auf:observation:v1@1",
+          "core": {
+            "snapshotHash": "0x44256531b03972bbc15514a3b9252b68271cf9256380ab9ee41156baa1d14a6e",
+            "windowStart": 1790812800,
+            "windowEnd": 1793491199
+          }
+        },
+        {
+          "file": "contingent-obligation-unit.valuation.obligation.json",
+          "kind": "valuation",
+          "contentHash": "0x6c6163696e80b220c7188c1504d32769a7fea75cce2adf9701b45d58824a6ca4",
+          "profile": "auf:method:conditional-payoff@1",
+          "core": {
+            "methodId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+            "interestId": "0xc5d69d15a60f832594b142bcdfacf43cbac680da7de939e045ac438763c0d150",
+            "assessmentBoundaryHash": "0x5c00d353a218fd49ae6c1e045df24f2048fbbd3416b81f1208af6d84de403c76",
+            "snapshotHash": "0x44256531b03972bbc15514a3b9252b68271cf9256380ab9ee41156baa1d14a6e",
+            "resultKind": 4,
+            "decimals": 2,
+            "value": "-3636",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 0
+          }
+        },
+        {
+          "file": "contingent-obligation-unit.valuation.insufficient-evidence.json",
+          "kind": "valuation",
+          "contentHash": "0xb363a9f9bd117353abddb4d15bb81e6523df9402f8c7afd845ff819ff3f6bf7c",
+          "profile": "auf:method:conditional-payoff@1",
+          "core": {
+            "methodId": "0x75c34f058eccff31530191dc7c5ab32bc9fe2c5e8377333cf23ca3c4d02f676f",
+            "interestId": "0xc5d69d15a60f832594b142bcdfacf43cbac680da7de939e045ac438763c0d150",
+            "assessmentBoundaryHash": "0x5c00d353a218fd49ae6c1e045df24f2048fbbd3416b81f1208af6d84de403c76",
+            "snapshotHash": "0x44256531b03972bbc15514a3b9252b68271cf9256380ab9ee41156baa1d14a6e",
+            "resultKind": 10,
+            "decimals": 0,
+            "value": "0",
+            "denominationId": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "asOf": 1793491200,
+            "horizonEnd": 0
+          }
+        }
+      ]
+    },
+    {
+      "unitId": 7,
+      "file": "examples/agent-chip.json",
+      "boundaryHash": "0x7d5667c7741640590c0b3ef8115e575923c9fbe67f5da841d1fec6eacaa8cd24",
+      "contains": [],
+      "controller": "0xb5cc58b287d6553a11f6e5f87f858a4ccf785b26",
+      "companions": [
+        {
+          "file": "agent-chip.characterization.json",
+          "kind": "characterization",
+          "contentHash": "0x07f11bc0d34168c4dcd58c31b34e94fe21c1c4409c58b2a84bc1c17631d48bc5",
+          "profile": "auf:characterization:v1@1"
+        },
+        {
+          "file": "agent-chip.observation.json",
+          "kind": "observation",
+          "contentHash": "0x708c0981f8731edcc698702bde01d9425b481ebc429ebc95d0b8cc2c9f68e1cf",
+          "profile": "auf:observation:v1@1",
+          "core": {
+            "snapshotHash": "0x708c0981f8731edcc698702bde01d9425b481ebc429ebc95d0b8cc2c9f68e1cf",
+            "windowStart": 1790812800,
+            "windowEnd": 1793491199
+          }
+        },
+        {
+          "file": "agent-chip.valuation.whole-dcf.json",
+          "kind": "valuation",
+          "contentHash": "0xb49a19c3c40624ecc164b8119781fb088e3dcc2a557fb9cc8705d824557aa9f9",
+          "profile": "auf:method:finite-horizon-dcf@1",
+          "core": {
+            "methodId": "0xc87ccdce9b29353f5516392f5dd0d505b373965910baa6e7e95b49431cf22d22",
+            "interestId": "0x93b59c859e870e0bccceb6518099af0b1c3b96134f2ba940bd9e57426828a681",
+            "assessmentBoundaryHash": "0x7d5667c7741640590c0b3ef8115e575923c9fbe67f5da841d1fec6eacaa8cd24",
+            "snapshotHash": "0x708c0981f8731edcc698702bde01d9425b481ebc429ebc95d0b8cc2c9f68e1cf",
+            "resultKind": 1,
+            "decimals": 2,
+            "value": "11281",
+            "denominationId": "0xc4ae21aac0c6549d71dd96035b7e0bdb6c79ebdba8891b666115bc976d16a29e",
+            "asOf": 1793491200,
+            "horizonEnd": 1798761599
+          }
+        }
+      ]
+    }
+  ]
+}
