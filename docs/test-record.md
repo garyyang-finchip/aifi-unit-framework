@@ -1,0 +1,41 @@
+# Test record - v0.1 (2026-10-21)
+
+Toolchain: Foundry 1.7.1 (forge, anvil, cast), solc 0.8.30, evm cancun, optimizer 200 runs, forge-std 1.9.7 (vendored), Node 22, ethers 6.17, canonicalize (RFC 8785), ajv 8 (JSON Schema 2020-12), eipw-lint-js 0.11.0.
+
+## Contracts
+
+| Contract | Runtime size | Notes |
+|---|---|---|
+| AUFUnitRegistry | 4,360 B | units, versions, containment, control, acknowledgments |
+| AUFAssertionRegistry | 9,683 B | envelope, cores, descriptors, EIP-712 / ERC-1271, supersession, revocation |
+
+## Foundry suite: 57 tests, 0 failures
+
+`test/AUFUnitRegistry.t.sol` (18): registration and sequential ids, zero-hash revert, versions by controller only, immutability of earlier versions, unknown unit and version reverts, controller change and freezing (including registering frozen), containment of existing versions, pinning (parent unchanged when child publishes), missing unit and missing version reverts, self-containment reverts (existing and newly registered Unit), acyclicity by construction, acknowledgments per kind and per version, acknowledgment validations, ERC-165.
+
+`test/AUFAssertionRegistry.t.sol` (19): descriptor write-once and lookups, controller vs third-party assertions and `byController` frozen at recording time, invalid subjects and envelopes, valuation core storage and events, negative monetary values, valuation validations (result kind range, method mismatch, value not allowed for non-value kinds, payload length), core getters for wrong kinds, observation core and window validation, revoke rules, supersession and its mismatches (other asserter, kind, unit, unknown, not active), EIP-712 signatures by EOA (replay rejected), expired deadline, wrong nonce, wrong signer, malformed signature, ERC-1271 wallet accepted and stranger wallet rejected, domain separator, ERC-165.
+
+`test/AUFValuationLib.t.sol` (9): the four vectors (70, 65, 112.81, 54.55) with two-decimal rounding, negative net equity, terminal value discounting, empty-input reverts, probability normalization and length checks, undiscounted obligation.
+
+`test/Vectors.t.sol` (11): interface ids against `type(I).interfaceId`, profile/interest/denomination/descriptor-kind identifiers, element id, canonicalization vector (exact canonical string and hash), bit-exact fixed-point agreement with the JavaScript reference for all five valuation vectors, EIP-712 type hash and struct hash against ethers' `TypedDataEncoder`, example signature recovery, registration of the seven example Units in planned order with containment, and the boundary-change exception vector (a receipt for version 1 is not listed under version 2).
+
+## Node tools
+
+- `tools/validate.js`: 33 documents (8 unit definitions incl. the v2 of Unit 1, 7 characterizations, 3 observations, 11 valuation receipts, 4 method descriptors) validate against the schemas with 0 failures; structural checks (element id uniqueness, relation endpoints, port ids, role scopes, observation reconciliation and transfer sums, subject hashes, assessment boundary deltas, value-less result kinds) pass.
+- `tools/resolve.js` (offline): all seven Units verified; the swarm's containment tree expands to the two sub-units; the shared skill license (share 1/2 in each sub-unit) is flagged "count once at the parent".
+- `tools/resolve.js` (on-chain, against the Anvil rehearsal): definitions fetched over HTTP and verified; assertions listed with status (active, superseded, revoked), `byController` flag and valuation cores; version 2 of Unit 1 verified separately with no receipts of version 1.
+- `tools/lint-erc.js`: eipw 0.11.0 reports 0 errors on the ERC text (file name and asset links rewritten as in the filing package; the spelling lint is listed for review only and flags only domain terms: AIFi, AUF, canonicalization, memristive, counterparty, asserter, ...).
+- `scripts/make-filing-package.py --number 9999`: 54 files, local lints clean.
+
+## Anvil rehearsal of the Sepolia evidence script
+
+Chain id 11155111 on Anvil, descriptors served from a local HTTP server so that hashes verify:
+
+| Phase | Transactions |
+|---|---|
+| deployCore | 2 |
+| registerAll | 11 (4 descriptors, 7 units) |
+| assertAll | 21 (7 controller characterizations, 3 observations and 11 receipts relayed by signature) |
+| lifecycle | 5 (2 acknowledgments, superseding receipt, revocation by the evaluator, version 2 of Unit 1; on Anvil the pre-funded evaluator needed no gas transfer, on Sepolia one more transaction funds it) |
+
+Total 39 transactions; all phases "ONCHAIN EXECUTION COMPLETE & SUCCESSFUL"; resolver output as described above.
