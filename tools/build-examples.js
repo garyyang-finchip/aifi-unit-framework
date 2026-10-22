@@ -51,6 +51,12 @@ const A = {
   skillOwner: '0x00000000000000000000000000000000000000f1',
   guarantor: '0x00000000000000000000000000000000000000f6',
   evaluator: '0x00000000000000000000000000000000000000ef',
+  revenueToken: '0x00000000000000000000000000000000000000dd',
+  fund: '0x00000000000000000000000000000000000000f7',
+  fundDeskA: '0x00000000000000000000000000000000000000f8',
+  fundDeskB: '0x00000000000000000000000000000000000000f9',
+  fundTreasury: '0x00000000000000000000000000000000000000e8',
+  analyst: '0x00000000000000000000000000000000000000d2',
 };
 const caip10 = (addr) => `eip155:${CHAIN}:${addr}`;
 const erc721 = (addr, id) => `eip155:${CHAIN}/erc721:${addr}/${id}`;
@@ -679,6 +685,167 @@ const subB = agentSubunit(3, 'B', A.agentB, A.treasuryB);
   });
 
   manifest.units.push({ unitId, name: doc.unit.name, file: 'agent-chip.json', boundaryHash, contains: [], elements: Object.fromEntries(elements.map((e) => [e.label || e.ref, e._id])), controller: CONTROLLER_OVERRIDE || A.operator });
+})();
+
+// ----------------------------------------------------------------------------- 8 to 11. One revenue entitlement under two references
+// Exception vector "Overlap under different references" (ERC Section 3.8 and 10.6). Fund F holds 40% of the license
+// fee stream of the Summarizer Skill Business (Unit 1) through two wrappers set up at different times: an assignment
+// agreement (Unit 9) and the later tokenization of that same agreement into RST tokens (Unit 8). The two positions
+// have different references and therefore different element ids, but the same underlying. A composite defined by
+// the fund declares `same-claim` with the tokenization terms as basis and is valued with the entitlement counted
+// once (Unit 10). A composite defined by an analyst who contains both holdings without establishing the relation
+// (Unit 11) has an unresolved overlap: its receipts are an interval and an insufficient-evidence statement.
+(function overlapUnits() {
+  const underlying = { ref: unitRef(CHAIN, REGISTRY, 1, 1), port: 'fees-in', share: '0.4' };
+  const dcfReceipt = JSON.parse(fs.readFileSync(path.join(OUT, 'skill-multi-license.valuation.revenue-right-dcf.json'), 'utf8'));
+  const dcfHash = canonicalHash(dcfReceipt);
+  const TOKEN_TERMS = 'urn:x:terms:rst-tokenization-2026';
+  const AGREEMENT = 'urn:x:agreement:summarizer-fee-assignment-2026';
+
+  // 8. Token form
+  const tokenPosition = el('financial-position', `eip155:${CHAIN}/erc20:${A.revenueToken}`, {
+    label: 'RST revenue-share tokens (40% of the license fee stream of Unit 1)',
+    underlying: { ...underlying, basis: [TOKEN_TERMS] },
+  });
+  const docToken = definition({
+    name: 'Revenue right on the Summarizer business, token form',
+    summary: 'Fund F holds 400 RST tokens, the tokenized form of a 40% assignment of the license fee stream of the Summarizer Skill Business. The position declares its underlying: Unit 1, port fees-in, share 0.4.',
+    tags: ['revenue-right', 'position', 'overlap-vector'],
+    elements: [tokenPosition],
+    relations: [rel('holds', 'unit', tokenPosition, { quantity: { amount: '400', unit: 'RST' }, share: '0.4', counterparty: caip10(A.skillOwner), basis: [TOKEN_TERMS] })],
+    ports: [{ id: 'distributions-in', direction: 'in', class: 'funds', template: 'auf:port:funds-in@1', asset: STABLE, account: caip10(A.fundTreasury), conditions: 'monthly distributions to RST holders' }],
+    authorities: { definitionController: caip10(A.fundDeskA), settlementAccounts: [caip10(A.fundTreasury)] },
+    scale: { window: 'P30D' },
+  });
+  const tokenHash = canonicalHash(docToken);
+  write('revenue-right-token.json', docToken);
+  write('revenue-right-token.characterization.json', {
+    auf: '1.0', kind: 'characterization', subject: subject(8, 1, tokenHash),
+    roles: [roleStmt('container', S.element(tokenPosition), { mechanism: 'rights', conditions: 'entitlement to 40% of the fee stream while the tokens are held' })],
+    structure: { profile: 'auf:structure:simple@1' },
+    knowledge: { status: 'classified' },
+  });
+  manifest.units.push({ unitId: 8, name: docToken.unit.name, file: 'revenue-right-token.json', boundaryHash: tokenHash, contains: [], elements: { [tokenPosition.label]: tokenPosition._id }, controller: CONTROLLER_OVERRIDE || A.fundDeskA });
+
+  // 9. Contractual form
+  const contractPosition = el('financial-position', AGREEMENT, {
+    label: 'Assigned right to 40% of the license fee stream of Unit 1 (assignment agreement)',
+    underlying: { ...underlying, basis: [AGREEMENT] },
+  });
+  const docContract = definition({
+    name: 'Revenue right on the Summarizer business, contractual form',
+    summary: 'Fund F is the assignee under an agreement that assigns 40% of the license fee stream of the Summarizer Skill Business. The position declares the same underlying as the token form: Unit 1, port fees-in, share 0.4.',
+    tags: ['revenue-right', 'position', 'overlap-vector'],
+    elements: [contractPosition],
+    relations: [rel('holds', 'unit', contractPosition, { share: '0.4', counterparty: caip10(A.skillOwner), basis: [AGREEMENT] })],
+    ports: [{ id: 'distributions-in', direction: 'in', class: 'funds', template: 'auf:port:funds-in@1', asset: STABLE, account: caip10(A.fundTreasury), conditions: 'monthly payments under the assignment' }],
+    authorities: { definitionController: caip10(A.fundDeskB), settlementAccounts: [caip10(A.fundTreasury)] },
+    scale: { window: 'P30D' },
+  });
+  const contractHash = canonicalHash(docContract);
+  write('revenue-right-contract.json', docContract);
+  write('revenue-right-contract.characterization.json', {
+    auf: '1.0', kind: 'characterization', subject: subject(9, 1, contractHash),
+    roles: [roleStmt('container', S.element(contractPosition), { mechanism: 'rights', conditions: 'entitlement to 40% of the fee stream under the assignment' })],
+    structure: { profile: 'auf:structure:simple@1' },
+    knowledge: { status: 'classified' },
+  });
+  manifest.units.push({ unitId: 9, name: docContract.unit.name, file: 'revenue-right-contract.json', boundaryHash: contractHash, contains: [], elements: { [contractPosition.label]: contractPosition._id }, controller: CONTROLLER_OVERRIDE || A.fundDeskB });
+
+  const ENTITLEMENT_VALUE = '45.12'; // 0.4 x 112.81 (revenue-right DCF receipt of Unit 1), rounded to two decimals
+  const TWICE = '90.24';
+  const priceInput = (position) => ({ element: position._id, quantity: '1', price: ENTITLEMENT_VALUE, priceSource: `0.4 x the revenue-right DCF receipt of Unit 1 (${dcfHash})`, priceAt: '2026-11-01T00:00:00Z' });
+  const snapshotHash = canonicalHash({ note: 'revenue-right DCF receipt of Unit 1 used as the price basis', receipt: dcfHash, share: '0.4' });
+
+  // 10. Composite defined by the fund: overlap declared
+  const unit8 = el('unit', unitRef(CHAIN, REGISTRY, 8, 1), { label: 'Token form, version 1' });
+  const unit9 = el('unit', unitRef(CHAIN, REGISTRY, 9, 1), { label: 'Contractual form, version 1' });
+  const docDeclared = definition({
+    name: 'Fund F revenue holdings (overlap declared)',
+    summary: 'The fund contains both holdings and states that the RST tokens are the tokenized form of the assignment agreement: the two positions are one economic claim under two references.',
+    tags: ['composite', 'overlap-vector'],
+    elements: [unit8, unit9, tokenPosition, contractPosition],
+    relations: [
+      rel('contains', 'unit', unit8),
+      rel('contains', 'unit', unit9),
+      rel('same-claim', tokenPosition, contractPosition, { scope: 'the RST tokens represent the rights under the assignment agreement; one 40% entitlement, not two', basis: [TOKEN_TERMS, AGREEMENT] }),
+    ],
+    ports: [{ id: 'distributions-in', direction: 'in', class: 'funds', template: 'auf:port:funds-in@1', asset: STABLE, account: caip10(A.fundTreasury) }],
+    authorities: { definitionController: caip10(A.fund), settlementAccounts: [caip10(A.fundTreasury)] },
+    scale: { window: 'P30D' },
+  });
+  const declaredHash = canonicalHash(docDeclared);
+  write('revenue-holdings-declared.json', docDeclared);
+  write('revenue-holdings-declared.characterization.json', {
+    auf: '1.0', kind: 'characterization', subject: subject(10, 1, declaredHash),
+    roles: [roleStmt('container', S.unit(), { mechanism: 'rights', conditions: 'one 40% entitlement held through two wrappers' })],
+    structure: { profile: 'auf:structure:composite@1' },
+    knowledge: { status: 'classified', notes: 'The same-claim relation between the two positions is declared by the fund with the tokenization terms as basis.' },
+  });
+  write('revenue-holdings-declared.valuation.net-equity.json', {
+    auf: '1.0', kind: 'valuation', subject: subject(10, 1, declaredHash), assessmentBoundary: { hash: declaredHash },
+    interest: { id: 'auf:interest:net-equity@1', perspective: 'holder' },
+    snapshot: { asOf: '2026-11-01T00:00:00Z', hash: snapshotHash },
+    method: { id: M.netEquity, name: 'auf:method:net-equity@1', params: { denomination: 'USD', assets: [priceInput(tokenPosition)], liabilities: [] } },
+    inputs: {
+      data: [{ element: tokenPosition._id, source: 'RST balance of the fund' }, { element: contractPosition._id, source: 'assignment agreement' }, { receipt: dcfHash, use: 'value of the whole fee stream' }],
+      overlaps: [{ elements: [tokenPosition._id, contractPosition._id], treatment: 'counted-once', basis: [TOKEN_TERMS], notes: 'declared same-claim in the definition of this Unit; the entitlement enters the sum once' }],
+      coverage: 'the 40% entitlement only; no other assets or liabilities',
+    },
+    result: { kind: 'monetary', value: ENTITLEMENT_VALUE, denomination: 'USD', decimals: 2 },
+    evaluator: caip10(A.evaluator),
+    notes: 'Exception vector "Overlap under different references", declared case: the two positions form one claim group and are counted once (0.4 x 112.81 = 45.12).',
+  });
+  manifest.units.push({ unitId: 10, name: docDeclared.unit.name, file: 'revenue-holdings-declared.json', boundaryHash: declaredHash, contains: [{ unitId: 8, version: 1 }, { unitId: 9, version: 1 }], elements: Object.fromEntries([unit8, unit9, tokenPosition, contractPosition].map((e) => [e.label || e.ref, e._id])), controller: CONTROLLER_OVERRIDE || A.fund });
+
+  // 11. Composite defined by an analyst: overlap undeclared
+  const docUndeclared = definition({
+    name: 'Combined revenue holdings as seen by an analyst (overlap undeclared)',
+    summary: 'An analyst contains both holdings without establishing whether they are one claim or two. The resolver reports an unresolved overlap candidate (same underlying, no declaration), and a point-valued sum is not admissible.',
+    tags: ['composite', 'overlap-vector'],
+    elements: [unit8, unit9],
+    relations: [rel('contains', 'unit', unit8), rel('contains', 'unit', unit9)],
+    ports: [],
+    authorities: { definitionController: caip10(A.analyst) },
+    scale: { window: 'P30D' },
+  });
+  const undeclaredHash = canonicalHash(docUndeclared);
+  write('revenue-holdings-undeclared.json', docUndeclared);
+  write('revenue-holdings-undeclared.characterization.json', {
+    auf: '1.0', kind: 'characterization', subject: subject(11, 1, undeclaredHash),
+    structure: { profile: 'auf:structure:composite@1' },
+    knowledge: { status: 'insufficient-evidence', notes: 'Whether the token position and the contractual right are the same claim is not established in this definition.' },
+  });
+  write('revenue-holdings-undeclared.valuation.net-equity.interval.json', {
+    auf: '1.0', kind: 'valuation', subject: subject(11, 1, undeclaredHash), assessmentBoundary: { hash: undeclaredHash },
+    interest: { id: 'auf:interest:net-equity@1', perspective: 'analyst' },
+    snapshot: { asOf: '2026-11-01T00:00:00Z', hash: snapshotHash },
+    method: { id: M.netEquity, name: 'auf:method:net-equity@1', params: { denomination: 'USD', assets: [priceInput(tokenPosition), priceInput(contractPosition)], liabilities: [] } },
+    inputs: {
+      data: [{ element: tokenPosition._id, source: 'RST balance' }, { element: contractPosition._id, source: 'assignment agreement' }, { receipt: dcfHash, use: 'value of the whole fee stream' }],
+      overlaps: [{ elements: [tokenPosition._id, contractPosition._id], treatment: 'unresolved', notes: 'same underlying (Unit 1, port fees-in, share 0.4), no same-claim or distinct-claim declaration, no acknowledgment by the obligor' }],
+      coverage: 'the two positions only',
+    },
+    result: { kind: 'interval', low: ENTITLEMENT_VALUE, high: TWICE, denomination: 'USD', decimals: 2 },
+    evaluator: caip10(A.evaluator),
+    notes: 'Exception vector "Overlap under different references", undeclared case: low = the candidates counted once (45.12), high = counted separately (90.24); no point estimate is given.',
+  });
+  write('revenue-holdings-undeclared.valuation.net-equity.insufficient-evidence.json', {
+    auf: '1.0', kind: 'valuation', subject: subject(11, 1, undeclaredHash), assessmentBoundary: { hash: undeclaredHash },
+    interest: { id: 'auf:interest:net-equity@1', perspective: 'analyst' },
+    snapshot: { asOf: '2026-11-01T00:00:00Z', hash: snapshotHash },
+    method: { id: M.netEquity, name: 'auf:method:net-equity@1', params: { denomination: 'USD', assets: [priceInput(tokenPosition), priceInput(contractPosition)], liabilities: [] } },
+    inputs: {
+      data: [{ element: tokenPosition._id }, { element: contractPosition._id }],
+      overlaps: [{ elements: [tokenPosition._id, contractPosition._id], treatment: 'unresolved' }],
+      missing: [{ item: `${tokenPosition._id} / ${contractPosition._id}`, reason: 'identity of the two claims not established; a same-claim or distinct-claim declaration with a basis, or an acknowledgment by the obligor, is required before the positions can be added' }],
+      coverage: 'the two positions only',
+    },
+    result: { kind: 'insufficient-evidence', reason: 'unresolved overlap between the token position and the contractual right', missing: [`${tokenPosition._id} / ${contractPosition._id}`] },
+    evaluator: caip10(A.evaluator),
+    notes: 'Exception vector "Overlap under different references", undeclared case, alternative statement to the interval receipt.',
+  });
+  manifest.units.push({ unitId: 11, name: docUndeclared.unit.name, file: 'revenue-holdings-undeclared.json', boundaryHash: undeclaredHash, contains: [{ unitId: 8, version: 1 }, { unitId: 9, version: 1 }], elements: Object.fromEntries([unit8, unit9].map((e) => [e.label || e.ref, e._id])), controller: CONTROLLER_OVERRIDE || A.analyst });
 })();
 
 for (const u of manifest.units) u.companions = companions[u.unitId] || [];

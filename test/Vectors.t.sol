@@ -164,26 +164,10 @@ contract VectorsTest is Test {
     function testExamplesRegisterInPlannedOrder() public {
         string memory j = _json("examples.json");
         AUFUnitRegistry units = new AUFUnitRegistry();
-        UnitRef[] memory none;
-        uint256 n = 7;
+        uint256 n = 11;
+        assertFalse(vm.keyExistsJson(j, ".units[11]"), "unexpected extra example unit");
         for (uint256 i = 0; i < n; i++) {
-            string memory base = string.concat(".units[", vm.toString(i), "]");
-            uint256 plannedId = vm.parseJsonUint(j, string.concat(base, ".unitId"));
-            bytes32 h = vm.parseJsonBytes32(j, string.concat(base, ".boundaryHash"));
-            address controller = vm.parseJsonAddress(j, string.concat(base, ".controller"));
-            string memory file = vm.parseJsonString(j, string.concat(base, ".file"));
-            // contains: read as an array of {unitId, version}
-            bytes memory raw = vm.parseJson(j, string.concat(base, ".contains"));
-            UnitRef[] memory refs = none;
-            if (plannedId == 4) {
-                refs = new UnitRef[](2);
-                refs[0] = UnitRef(vm.parseJsonUint(j, string.concat(base, ".contains[0].unitId")), uint32(vm.parseJsonUint(j, string.concat(base, ".contains[0].version"))));
-                refs[1] = UnitRef(vm.parseJsonUint(j, string.concat(base, ".contains[1].unitId")), uint32(vm.parseJsonUint(j, string.concat(base, ".contains[1].version"))));
-            } else {
-                assertEq(raw.length, 64, "unexpected contains entries"); // abi-encoded empty array
-            }
-            uint256 id = units.registerUnit(controller, h, file, refs);
-            assertEq(id, plannedId);
+            _registerExample(units, j, i);
         }
         // swarm (4) contains sub-units 2 and 3 at version 1
         (,,, uint256 c) = units.versionOf(4, 1);
@@ -191,6 +175,34 @@ contract VectorsTest is Test {
         assertEq(units.containedAt(4, 1, 0).unitId, 2);
         assertEq(units.containedAt(4, 1, 1).unitId, 3);
         assertEq(units.controllerOf(4), vm.parseJsonAddress(j, ".units[3].controller"));
+        // the two revenue-holding composites (10, 11) both contain the token form (8) and the contractual form (9)
+        (,,, uint256 c10) = units.versionOf(10, 1);
+        (,,, uint256 c11) = units.versionOf(11, 1);
+        assertEq(c10, 2);
+        assertEq(c11, 2);
+        assertEq(units.containedAt(10, 1, 0).unitId, 8);
+        assertEq(units.containedAt(11, 1, 1).unitId, 9);
+    }
+
+    function _registerExample(AUFUnitRegistry units, string memory j, uint256 i) internal {
+        string memory base = string.concat(".units[", vm.toString(i), "]");
+        uint256 plannedId = vm.parseJsonUint(j, string.concat(base, ".unitId"));
+        bytes32 h = vm.parseJsonBytes32(j, string.concat(base, ".boundaryHash"));
+        address controller = vm.parseJsonAddress(j, string.concat(base, ".controller"));
+        string memory file = vm.parseJsonString(j, string.concat(base, ".file"));
+        uint256 id = units.registerUnit(controller, h, file, _containsOf(j, base));
+        assertEq(id, plannedId);
+    }
+
+    // contains: read as an array of {unitId, version} of any length
+    function _containsOf(string memory j, string memory base) internal view returns (UnitRef[] memory refs) {
+        uint256 count = 0;
+        while (vm.keyExistsJson(j, string.concat(base, ".contains[", vm.toString(count), "]"))) count++;
+        refs = new UnitRef[](count);
+        for (uint256 k = 0; k < count; k++) {
+            string memory entry = string.concat(base, ".contains[", vm.toString(k), "]");
+            refs[k] = UnitRef(vm.parseJsonUint(j, string.concat(entry, ".unitId")), uint32(vm.parseJsonUint(j, string.concat(entry, ".version"))));
+        }
     }
 
     // ------------------------------------------------------------ exception vector: boundary change

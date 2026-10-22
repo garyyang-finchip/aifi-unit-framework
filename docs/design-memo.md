@@ -65,3 +65,18 @@ The ERC requires only ERC-165, EIP-712 and ERC-1271. The author's other proposal
 4. Whether to add `interval` low/high to the on-chain core (today only the point estimate is on chain).
 5. Fee, bond and eligibility profiles for evaluators (kept out of the kernel on purpose).
 6. A signed off-chain acknowledgment variant (today acknowledgments are transactions).
+
+## 9. Revision record
+
+### 2026-10-23: claim identity and overlap (Sections 3.8 and 10.6)
+
+Prompted by the first review question on the Magicians thread: two child Units can describe one revenue entitlement through different contracts or descriptors; their element identifiers differ, so the shared-element rule (identical `elementId`) does not see the overlap, and a method declared composable would add the same cash flow twice.
+
+Decision: the framework neither assigns a global identity to underlying claims (off-chain entitlements cannot be identified by a registry standard) nor leaves reconciliation to the evaluator's discretion. It makes overlap a declared, checkable and acknowledgeable fact and attaches the consequence to the valuation statement.
+
+- Elements may declare `underlying` (what the position is a claim against, with port and share). Same underlying without a declaration makes two elements overlap candidates.
+- Two identity relations, `same-claim` and `distinct-claim`, both with a required `basis`; a parent can state them between its children's positions because element identifiers are global. The obligor confirms through the existing `description-endorsement` acknowledgment.
+- Resolvers group elements into claim groups (same identifier or declared same-claim) and report unresolved overlap candidates.
+- A composable method applied over unresolved candidates must not return a point `monetary` value: `interval` (counted once / counted separately, no point value) or `insufficient-evidence`. Receipts over composites list every claim group and candidate under `inputs.overlaps` with its treatment. Composability stays necessary and is explicitly not sufficient.
+- Worked example Units 8 to 11 and exception vector 7 (45.12 counted once; interval 45.12 to 90.24 or insufficient evidence when undeclared). The reference resolver rejects a point value over an unresolved overlap.
+- No contract change, no new dependency, method descriptors unchanged (the rule sits above the methods, in Section 10.6); the Sepolia record keeps the seven Units of the first run.

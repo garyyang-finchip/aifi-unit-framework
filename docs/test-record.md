@@ -1,4 +1,4 @@
-# Test record - v0.1 (2026-10-21)
+# Test record - v0.1 (2026-10-21), updated for the overlap revision (2026-10-23)
 
 Toolchain: Foundry 1.7.1 (forge, anvil, cast), solc 0.8.30, evm cancun, optimizer 200 runs, forge-std 1.9.7 (vendored), Node 22, ethers 6.17, canonicalize (RFC 8785), ajv 8 (JSON Schema 2020-12), eipw-lint-js 0.11.0.
 
@@ -17,12 +17,12 @@ Toolchain: Foundry 1.7.1 (forge, anvil, cast), solc 0.8.30, evm cancun, optimize
 
 `test/AUFValuationLib.t.sol` (9): the four vectors (70, 65, 112.81, 54.55) with two-decimal rounding, negative net equity, terminal value discounting, empty-input reverts, probability normalization and length checks, undiscounted obligation.
 
-`test/Vectors.t.sol` (11): interface ids against `type(I).interfaceId`, profile/interest/denomination/descriptor-kind identifiers, element id, canonicalization vector (exact canonical string and hash), bit-exact fixed-point agreement with the JavaScript reference for all five valuation vectors, EIP-712 type hash and struct hash against ethers' `TypedDataEncoder`, example signature recovery, registration of the seven example Units in planned order with containment, and the boundary-change exception vector (a receipt for version 1 is not listed under version 2).
+`test/Vectors.t.sol` (11): interface ids against `type(I).interfaceId`, profile/interest/denomination/descriptor-kind identifiers, element id, canonicalization vector (exact canonical string and hash), bit-exact fixed-point agreement with the JavaScript reference for all five valuation vectors, EIP-712 type hash and struct hash against ethers' `TypedDataEncoder`, example signature recovery, registration of the eleven example Units in planned order with containment (Units 4, 10 and 11 contain two Units each), and the boundary-change exception vector (a receipt for version 1 is not listed under version 2).
 
 ## Node tools
 
-- `tools/validate.js`: 33 documents (8 unit definitions incl. the v2 of Unit 1, 7 characterizations, 3 observations, 11 valuation receipts, 4 method descriptors) validate against the schemas with 0 failures; structural checks (element id uniqueness, relation endpoints, port ids, role scopes, observation reconciliation and transfer sums, subject hashes, assessment boundary deltas, value-less result kinds) pass.
-- `tools/resolve.js` (offline): all seven Units verified; the swarm's containment tree expands to the two sub-units; the shared skill license (share 1/2 in each sub-unit) is flagged "count once at the parent".
+- `tools/validate.js`: 44 documents (12 unit definitions incl. the v2 of Unit 1, 11 characterizations, 3 observations, 14 valuation receipts, 4 method descriptors) validate against the schemas with 0 failures; structural checks (element id uniqueness, relation endpoints, identity relations with basis, port ids, role scopes, observation reconciliation and transfer sums, subject hashes, assessment boundary deltas, value-less result kinds, no point value with an unresolved overlap) pass.
+- `tools/resolve.js` (offline): all eleven Units verified; the swarm's containment tree expands to the two sub-units and the shared skill license (share 1/2 in each sub-unit) is reported as one claim group (same element id) to count once at the parent; Unit 10 reports the declared claim group of the token and contractual positions (same-claim, basis stated); Unit 11 reports the unresolved overlap (same underlying, no declaration) and the resolver rejects a point-valued receipt over it (negative test, exit code 1).
 - `tools/resolve.js` (on-chain, against the Anvil rehearsal): definitions fetched over HTTP and verified; assertions listed with status (active, superseded, revoked), `byController` flag and valuation cores; version 2 of Unit 1 verified separately with no receipts of version 1.
 - `tools/lint-erc.js`: eipw 0.11.0 reports 0 errors on the ERC text (file name and asset links rewritten as in the filing package; the spelling lint is listed for review only and flags only domain terms: AIFi, AUF, canonicalization, memristive, counterparty, asserter, ...).
 - `scripts/make-filing-package.py --number 9999`: 54 files, local lints clean (rebuilt as `--number 8454` with the new discussions-to on 2026-10-22 after the number was assigned; eipw 0 errors).

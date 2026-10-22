@@ -60,3 +60,17 @@ The Sepolia evidence run is done: 40 transactions, blocks 11964286 to 11964613, 
 What is on chain: the four method descriptors, the seven worked Units (the swarm Unit 4 contains Units 2 and 3 at pinned version 1), seven controller characterizations, three observations and eleven valuation receipts signed by a separate evaluator key and relayed through `assertStatementBySig`, two typed acknowledgments, one superseding receipt, one revocation sent by the evaluator itself, and version 2 of Unit 1 (its version-1 receipts do not carry over). The state read back from the registries matches the published descriptors field by field.
 
 Record: https://github.com/garyyang-finchip/aifi-unit-framework/blob/main/docs/sepolia-evidence.md (transactions, decoded state, how to re-run the resolver against the chain). ERC pull request: https://github.com/ethereum/ERCs/pull/2095.
+
+---
+
+## Reply 2: overlap revision landed (to be posted after the repository and PR #2095 are updated)
+
+The overlap revision is up in the repository and in PR #2095 (Sections 3.3, 3.4, the new 3.8, 9, 10.1, 10.6, 14.4.1, exception vector 7, Rationale and Security Considerations). What changed, in the order of the five points above:
+
+1. `underlying` on elements (Section 3.3): what a position is a claim against, with port and share. Same underlying and no declaration about each other makes two elements overlap candidates.
+2. `same-claim` and `distinct-claim` relations with a required `basis` (Section 3.4); a parent lists its children's positions and states the relation between them, since element identifiers are global. The obligor confirms through the existing `description-endorsement` acknowledgment (Section 3.8).
+3. Resolver rule (Section 3.8): claim groups by identical element id or declared `same-claim`; unresolved overlap candidates reported with the declarations and their basis; no merging on labels, shares or counterparties.
+4. Aggregation rule (Section 10.6): over unresolved candidates a composable method returns `interval` (counted once / counted separately, no point value) or `insufficient-evidence`, never a point `monetary` value; every receipt over a composite lists its claim groups and candidates under `inputs.overlaps` with the treatment applied. Composability stays necessary and is explicitly not sufficient.
+5. Worked example Units 8 to 11 (`assets/erc-8454/examples/revenue-right-*.json`, `revenue-holdings-*.json`) and exception vector 7: one 40% entitlement held as a token position and as a contractual right (different ids, same underlying). The composite that declares `same-claim` is valued at 45.12 (counted once); the composite that declares nothing gets an interval receipt (45.12 to 90.24) and an insufficient-evidence receipt. `node tools/resolve.js --unit 11` prints the unresolved overlap, and the resolver rejects a point-valued receipt over it.
+
+No contract change and no new dependency; the method descriptors are unchanged because the rule sits above the methods.

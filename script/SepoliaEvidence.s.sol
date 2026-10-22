@@ -13,7 +13,8 @@ import {UnitRef, AckKind, AssertionInput, AssertionKind, ValuationCore, Observat
 ///      -> regenerate the examples with the real registry and controller:
 ///         node tools/build-examples.js --registry <unitRegistry> --controller <deployer> --descriptor-base <raw-url-base>
 ///         node tools/vectors.js
-///   2. registerAll()       register the four method descriptors and the seven example Units in planned order
+///   2. registerAll()       register the four method descriptors and the first seven example Units in planned order
+///                           (Units 8 to 11 of the examples were added after the recorded run and are not part of it)
 ///   3. assertAll()         controller characterizations (deployer) + third-party observations and valuations
 ///                          signed by EVALUATOR_PK and relayed by the deployer through assertStatementBySig
 ///   4. lifecycle()         acknowledgments, a superseding receipt, a revocation and a second version of Unit 1

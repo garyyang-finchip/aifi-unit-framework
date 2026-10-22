@@ -40,7 +40,7 @@ Commit and push the regenerated `assets/erc-auf/examples` and `vectors` to the r
 forge script script/SepoliaEvidence.s.sol --sig "registerAll()" --rpc-url $SEPOLIA_RPC_URL --broadcast
 ```
 
-Registers the four method descriptors (write-once) and the seven Units in planned order (ids 1..7; Unit 4 contains 2@1 and 3@1).
+Registers the four method descriptors (write-once) and the first seven Units in planned order (ids 1..7; Unit 4 contains 2@1 and 3@1). Units 8 to 11 of the current examples (the overlap vector) were added after the recorded run; the script registers the first seven so that it stays a faithful record of that run.
 
 ## Phase 4: assertions
 
@@ -48,7 +48,7 @@ Registers the four method descriptors (write-once) and the seven Units in planne
 forge script script/SepoliaEvidence.s.sol --sig "assertAll()" --rpc-url $SEPOLIA_RPC_URL --broadcast
 ```
 
-Controller characterizations for all seven Units (direct transactions by the deployer, `byController = true`); observations and valuation receipts signed by the evaluator and relayed through `assertStatementBySig` (`byController = false`).
+Controller characterizations for the seven Units (direct transactions by the deployer, `byController = true`); observations and valuation receipts signed by the evaluator and relayed through `assertStatementBySig` (`byController = false`).
 
 ## Phase 5: lifecycle
 

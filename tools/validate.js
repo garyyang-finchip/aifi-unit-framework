@@ -2,7 +2,7 @@
 'use strict';
 // Validates the example documents and method descriptors against the JSON Schemas of the ERC assets,
 // and checks the structural rules that schemas cannot express (element id uniqueness, relation endpoints,
-// observation reconciliation, subject hashes).
+// claim declarations, observation reconciliation, subject hashes, unresolved overlaps against point values).
 
 const fs = require('fs');
 const path = require('path');
@@ -75,6 +75,10 @@ for (const { file, doc } of docs) {
         if (r.from !== 'unit') fail(file, `contains must start at the unit`);
       }
       if (r.from === r.to) fail(file, `relation ${r.type} is a self-loop`);
+      if (r.type === 'same-claim' || r.type === 'distinct-claim') {
+        if (r.from === 'unit' || r.to === 'unit') fail(file, `${r.type} must link two elements`);
+        if (!Array.isArray(r.basis) || r.basis.length === 0) fail(file, `${r.type} requires a basis`);
+      }
     }
     const portIds = new Set();
     for (const p of doc.ports) {
@@ -124,6 +128,10 @@ for (const { file, doc } of docs) {
       if (['not-valuable', 'insufficient-evidence', 'not-applicable'].includes(r.kind) && r.value !== undefined) {
         fail(file, 'result kind without value carries a value');
       }
+      // Section 10.6: an unresolved overlap admits no point value.
+      const unresolved = (doc.inputs.overlaps || []).filter((o) => o.treatment === 'unresolved');
+      if (unresolved.length && r.kind === 'monetary') fail(file, 'monetary result although an overlap is listed as unresolved');
+      if (r.kind === 'interval' && (r.low === undefined || r.high === undefined)) fail(file, 'interval result without low and high');
     }
   }
 }

@@ -4,7 +4,9 @@
 //
 // Offline mode (default): resolves the worked examples from assets/erc-auf/examples using manifest.json
 // as the "registry" (unitId -> definition file), verifies hashes, expands containment by pinned versions,
-// flags shared elements, checks observation reconciliation and reports required extensions it does not know.
+// groups elements into claim groups (same element id or declared same-claim), reports unresolved overlap
+// candidates (same underlying, no declaration), checks observation reconciliation and the point-value rule for
+// receipts over unresolved overlaps, and reports required extensions it does not know.
 //
 //   node tools/resolve.js                       all example units
 //   node tools/resolve.js --unit 4              one example unit
@@ -195,13 +197,21 @@ async function resolveUnit(src, unitId, version, report, pathSoFar = [], depth =
       node.elements.push({ elementId: id, kind: e.kind, ref: e.ref, label: e.label });
       const key = id;
       if (!report.elementIndex.has(key)) report.elementIndex.set(key, []);
-      report.elementIndex.get(key).push({ path: [...pathSoFar, `${unitId}@${version}`], relation: null });
+      report.elementIndex.get(key).push({ path: [...pathSoFar, `${unitId}@${version}`], relation: null, label: e.label });
+      if (e.underlying && e.underlying.ref) {
+        const ukey = `${e.underlying.ref}${e.underlying.port ? '#' + e.underlying.port : ''}`;
+        if (!report.underlying.has(ukey)) report.underlying.set(ukey, new Set());
+        report.underlying.get(ukey).add(id);
+      }
     }
     for (const r of doc.relations || []) {
       for (const end of [r.from, r.to]) if (end !== 'unit' && !ids.has(end)) node.problems.push(`relation ${r.type} references unknown endpoint ${end}`);
       if (r.type === 'licenses' || r.type === 'owns' || r.type === 'holds' || r.type === 'revenue-share') {
         const hits = report.elementIndex.get(r.to);
         if (hits) hits[hits.length - 1].relation = { type: r.type, share: r.share, exclusive: r.exclusive };
+      }
+      if ((r.type === 'same-claim' || r.type === 'distinct-claim') && r.from !== 'unit' && r.to !== 'unit') {
+        report.claimDeclarations.push({ type: r.type, a: r.from, b: r.to, basis: r.basis || [], declaredIn: `${unitId}@${version}` });
       }
     }
     // containment: on-chain list must match the definition's contains relations
@@ -219,7 +229,7 @@ async function resolveUnit(src, unitId, version, report, pathSoFar = [], depth =
   const companions = await src.companions(unitId, version);
   node.companions = [];
   for (const { file, doc: cdoc } of companions) {
-    const entry = { file, kind: cdoc.kind, contentHash: canonicalHash(cdoc), subjectMatches: cdoc.subject && cdoc.subject.boundaryHash === v.boundaryHash };
+    const entry = { file, kind: cdoc.kind, contentHash: canonicalHash(cdoc), subjectMatches: cdoc.subject && cdoc.subject.boundaryHash === v.boundaryHash, doc: cdoc };
     checkExtensions(cdoc, `${file}`, report);
     if (cdoc.kind === 'observation') entry.problems = checkObservation(cdoc);
     if (cdoc.kind === 'valuation') entry.summary = { interest: cdoc.interest.id, perspective: cdoc.interest.perspective, method: cdoc.method.name || cdoc.method.id, resultKind: cdoc.result.kind, value: cdoc.result.value, denomination: cdoc.result.denomination, assessmentBoundaryDiffers: !!(cdoc.assessmentBoundary && cdoc.assessmentBoundary.hash !== cdoc.subject.boundaryHash) };
@@ -229,12 +239,64 @@ async function resolveUnit(src, unitId, version, report, pathSoFar = [], depth =
   return node;
 }
 
-function sharedElements(report) {
-  const shared = [];
-  for (const [id, hits] of report.elementIndex.entries()) {
-    if (hits.length > 1) shared.push({ elementId: id, occurrences: hits.map((h) => ({ path: h.path.join(' > '), relation: h.relation })) });
+// Claim groups (Section 3.8): elements with the same id are one element; elements linked by same-claim are one claim.
+function claimGroups(report) {
+  const parent = new Map();
+  const find = (x) => { while (parent.get(x) !== x) { parent.set(x, parent.get(parent.get(x))); x = parent.get(x); } return x; };
+  const union = (a, b) => { parent.set(find(a), find(b)); };
+  for (const id of report.elementIndex.keys()) parent.set(id, id);
+  for (const d of report.claimDeclarations) {
+    if (d.type !== 'same-claim') continue;
+    for (const x of [d.a, d.b]) if (!parent.has(x)) parent.set(x, x);
+    union(d.a, d.b);
   }
-  return shared;
+  const groups = new Map();
+  for (const id of parent.keys()) { const r = find(id); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(id); }
+  const out = [];
+  for (const members of groups.values()) {
+    const occurrences = [];
+    for (const id of members) for (const h of report.elementIndex.get(id) || []) occurrences.push({ elementId: id, path: h.path.join(' > '), relation: h.relation, label: h.label });
+    const declared = report.claimDeclarations.filter((d) => d.type === 'same-claim' && members.includes(d.a) && members.includes(d.b));
+    if (occurrences.length > 1) out.push({ members, occurrences, declaredBy: declared.map((d) => ({ in: d.declaredIn, basis: d.basis })) });
+  }
+  return { groups: out, groupOf: (id) => (parent.has(id) ? find(id) : id) };
+}
+
+// Overlap candidates (Section 3.8): different claim groups, same underlying, no distinct-claim declaration between them.
+function overlapCandidates(report, groupOf) {
+  const distinct = new Set(report.claimDeclarations.filter((d) => d.type === 'distinct-claim').map((d) => [d.a, d.b].sort().join('|')));
+  const out = [];
+  for (const [ukey, idSet] of report.underlying.entries()) {
+    const ids = [...idSet];
+    for (let i = 0; i < ids.length; i++) {
+      for (let j = i + 1; j < ids.length; j++) {
+        if (groupOf(ids[i]) === groupOf(ids[j])) continue;
+        if (distinct.has([ids[i], ids[j]].sort().join('|'))) continue;
+        const where = (id) => (report.elementIndex.get(id) || []).map((h) => h.path.join(' > '));
+        out.push({ underlying: ukey, elements: [ids[i], ids[j]], where: [where(ids[i]), where(ids[j])] });
+      }
+    }
+  }
+  return out;
+}
+
+// Section 10.6: a receipt over a boundary with an unresolved overlap candidate must not carry a point monetary value
+// for an interest that would add the candidates, unless it states its own resolution of the pair with a basis.
+function checkReceiptsAgainstOverlaps(root, candidates) {
+  const problems = [];
+  if (!candidates.length) return problems;
+  for (const c of root.companions || []) {
+    if (c.kind !== 'valuation' || !c.doc) continue;
+    const r = c.doc.result;
+    if (r.kind !== 'monetary') continue;
+    const overlaps = (c.doc.inputs && c.doc.inputs.overlaps) || [];
+    for (const cand of candidates) {
+      const stated = overlaps.find((o) => cand.elements.every((e) => o.elements.includes(e)));
+      const resolved = stated && stated.treatment !== 'unresolved' && Array.isArray(stated.basis) && stated.basis.length > 0;
+      if (!resolved) problems.push(`${c.file}: point monetary value although the overlap ${cand.elements.join(' / ')} (underlying ${cand.underlying}) is unresolved`);
+    }
+  }
+  return problems;
 }
 
 async function main() {
@@ -244,15 +306,17 @@ async function main() {
   const out = [];
   let problems = 0;
   for (const unitId of unitIds) {
-    const report = { nodes: [], partial: [], unsupported: [], elementIndex: new Map() };
+    const report = { nodes: [], partial: [], unsupported: [], elementIndex: new Map(), underlying: new Map(), claimDeclarations: [] };
     const root = await resolveUnit(src, unitId, version, report);
-    const shared = sharedElements(report);
-    const summary = { root, partial: report.partial, unsupported: report.unsupported, sharedElements: shared, note: 'Valuations are listed per interest, denomination and assessment boundary and are never aggregated by this resolver.' };
+    const { groups, groupOf } = claimGroups(report);
+    const candidates = overlapCandidates(report, groupOf);
+    const overlapProblems = checkReceiptsAgainstOverlaps(root, candidates);
+    const summary = { root, partial: report.partial, unsupported: report.unsupported, claimGroups: groups, unresolvedOverlaps: candidates, overlapProblems, note: 'Valuations are listed per interest, denomination and assessment boundary and are never aggregated by this resolver.' };
     out.push(summary);
     for (const n of report.nodes) problems += n.problems.length + (n.companions || []).reduce((a, c) => a + (c.problems ? c.problems.length : 0), 0);
-    problems += report.unsupported.length;
+    problems += report.unsupported.length + overlapProblems.length;
   }
-  if (has('--json')) { console.log(JSON.stringify(out, (k, v) => (typeof v === 'bigint' ? v.toString() : v), 2)); }
+  if (has('--json')) { console.log(JSON.stringify(out, (k, v) => (k === 'doc' ? undefined : typeof v === 'bigint' ? v.toString() : v), 2)); }
   else {
     for (const s of out) {
       const print = (n, indent) => {
@@ -267,7 +331,12 @@ async function main() {
         for (const ch of n.children) print(ch, indent + 2);
       };
       print(s.root, 0);
-      for (const sh of s.sharedElements) console.log(`  shared element ${sh.elementId} appears ${sh.occurrences.length} times: ${sh.occurrences.map((o) => `${o.path}${o.relation ? ` [${o.relation.type}${o.relation.share ? ' share ' + o.relation.share : ''}]` : ''}`).join('; ')} -> count once at the parent`);
+      for (const g of s.claimGroups) {
+        const how = g.declaredBy.length ? `declared same-claim in ${g.declaredBy.map((d) => d.in).join(', ')} (basis ${g.declaredBy.map((d) => d.basis.join(', ')).join('; ')})` : 'same element id';
+        console.log(`  claim group {${g.members.map((m) => m.slice(0, 10)).join(', ')}} appears ${g.occurrences.length} times (${how}): ${g.occurrences.map((o) => `${o.path}${o.relation ? ` [${o.relation.type}${o.relation.share ? ' share ' + o.relation.share : ''}]` : ''}`).join('; ')} -> count once at the parent`);
+      }
+      for (const c of s.unresolvedOverlaps) console.log(`  UNRESOLVED OVERLAP: ${c.elements[0]} (${c.where[0].join(', ')}) and ${c.elements[1]} (${c.where[1].join(', ')}) share the underlying ${c.underlying} and carry no same-claim or distinct-claim declaration -> no point value admissible; interval or insufficient-evidence only`);
+      for (const p of s.overlapProblems) console.log(`  ! ${p}`);
       for (const u of s.unsupported) console.log(`  UNSUPPORTED required extension ${u.extension} at ${u.where}`);
       for (const p of s.partial) console.log(`  PARTIAL: ${p.unitId}@${p.version}: ${p.reason}`);
     }

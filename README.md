@@ -8,9 +8,9 @@ Status: Draft, number ERC-8454 assigned on ethereum/ERCs pull request #2095 (edi
 
 The framework fixes three things and leaves the fourth open:
 
-1. **Boundary.** A Unit is a versioned Unit Definition: elements (agent, skill, task, service, model, compute, data, financial-position, nested unit), typed relations with the rights and obligations under which each element is included (owns, licenses, reserves, revenue-share, holds, owes, commits, pledges, depends-on, exchanges, controls, contains), economic interfaces (ports), authorities and validity. Each version is committed on chain by `boundaryHash = keccak256(JCS(definition))`.
+1. **Boundary.** A Unit is a versioned Unit Definition: elements (agent, skill, task, service, model, compute, data, financial-position, nested unit), typed relations with the rights and obligations under which each element is included (owns, licenses, reserves, revenue-share, holds, owes, commits, pledges, depends-on, exchanges, controls, contains), economic interfaces (ports), authorities and validity. Positions declare what they are a claim against (`underlying`), and `same-claim` / `distinct-claim` declarations with a basis tell resolvers when two references are one entitlement; an undeclared overlap is reported and admits no point value. Each version is committed on chain by `boundaryHash = keccak256(JCS(definition))`.
 2. **Characterization.** Stackable economic roles (source, sink, conductor, damping, container, pledge, valve, control) attributed to the Unit, a port or an element under stated conditions; behavior attributes (linearity, determinism, time variance, memory) declared separately; behavior models (the financial-circuit analysis profile among them); structure profiles (simple, composite, chip); application profiles (credit); explicit knowledge states (classified, unclassified, insufficient-evidence, not-applicable).
-3. **Measurement and valuation statements.** Observation records (per-asset stocks, port transfers, minting, burning, adjustments, non-cash changes, coverage; missing is never zero) and valuation receipts (subject version, assessment boundary, interest and perspective, snapshot, content-addressed method, inputs, typed result incl. negative, interval, scenario, score, grade and "cannot value").
+3. **Measurement and valuation statements.** Observation records (per-asset stocks, port transfers, minting, burning, adjustments, non-cash changes, coverage; missing is never zero) and valuation receipts (subject version, assessment boundary, interest and perspective, snapshot, content-addressed method, inputs incl. the treatment of every claim group and overlap candidate, typed result incl. negative, interval, scenario, score, grade and "cannot value").
 4. **Open:** the valuation functions, behavior models and credit models themselves. Methods are content-addressed descriptors; any evaluator can plug in any method while every reader still understands what a figure refers to.
 
 Two small registries carry it on chain: `AUFUnitRegistry` (units, versions, containment of pinned versions, definition control, typed acknowledgments) and `AUFAssertionRegistry` (one assertion envelope for characterizations, observations, valuations and extensions, with validity, revocation, supersession, EIP-712/ERC-1271 signed assertions, and content-addressed descriptors).
@@ -26,7 +26,7 @@ assets/erc-auf/
                                      method descriptor, profile descriptor, valuation receipt, common)
   vectors/                           interface ids, identifiers, canonicalization, valuation vectors,
                                      EIP-712 vector, example hashes, methods/ (4 method descriptors)
-  examples/                          7 worked Units with characterizations, observations and receipts
+  examples/                          11 worked Units with characterizations, observations and receipts
 test/                                Foundry suite (57 tests) incl. ethers <-> solc vector cross-checks
 tools/                               build-examples.js, vectors.js, validate.js, resolve.js, lint-erc.js
 script/SepoliaEvidence.s.sol         four-phase evidence run (deploy, register, assert, lifecycle)
@@ -95,7 +95,7 @@ The role vocabulary and the financial-circuit analysis profile come from the aut
 
 ## Sepolia deployment
 
-Executed on 21 October 2026 (blocks 11964286 to 11964613, 40 transactions, all successful). The evidence run (`script/SepoliaEvidence.s.sol`) deploys both registries, registers the four method descriptors and the seven example Units, records controller characterizations and signed third-party observations and receipts, and then demonstrates acknowledgments, supersession, revocation and a second version.
+Executed on 21 October 2026 (blocks 11964286 to 11964613, 40 transactions, all successful). The evidence run (`script/SepoliaEvidence.s.sol`) deploys both registries, registers the four method descriptors and the first seven example Units (Units 8 to 11 were added in the overlap revision afterwards), records controller characterizations and signed third-party observations and receipts, and then demonstrates acknowledgments, supersession, revocation and a second version.
 
 | Contract | Sepolia address | Source |
 |---|---|---|
