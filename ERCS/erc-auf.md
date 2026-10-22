@@ -1,9 +1,9 @@
 ---
-eip: 9999
+eip: 8454
 title: AIFi Unit Framework
 description: Registry and descriptor model defining AIFi economic units by boundary and rights, with their roles, observations and valuations
 author: Gary Yang (@garyyang-finchip)
-discussions-to: https://ethereum-magicians.org/t/draft-erc-aifi-unit-framework-auf-boundary-roles-and-valuation-statements-for-ai-economic-units/30040
+discussions-to: https://ethereum-magicians.org/t/erc-8454-aifi-unit-framework/30040
 status: Draft
 type: Standards Track
 category: ERC

@@ -1,6 +1,6 @@
 # Magicians post
 
-Posted on 2026-10-21 as topic 30040: https://ethereum-magicians.org/t/draft-erc-aifi-unit-framework-auf-boundary-roles-and-valuation-statements-for-ai-economic-units/30040
+Posted on 2026-10-21 as topic 30040 (retitled `ERC-8454: AIFi Unit Framework` on 2026-10-21 after the number was assigned; current URL https://ethereum-magicians.org/t/erc-8454-aifi-unit-framework/30040)
 
 Title: `Draft ERC: AIFi Unit Framework (AUF) - boundary, roles and valuation statements for AI economic units`
 

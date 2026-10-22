@@ -25,7 +25,7 @@ Toolchain: Foundry 1.7.1 (forge, anvil, cast), solc 0.8.30, evm cancun, optimize
 - `tools/resolve.js` (offline): all seven Units verified; the swarm's containment tree expands to the two sub-units; the shared skill license (share 1/2 in each sub-unit) is flagged "count once at the parent".
 - `tools/resolve.js` (on-chain, against the Anvil rehearsal): definitions fetched over HTTP and verified; assertions listed with status (active, superseded, revoked), `byController` flag and valuation cores; version 2 of Unit 1 verified separately with no receipts of version 1.
 - `tools/lint-erc.js`: eipw 0.11.0 reports 0 errors on the ERC text (file name and asset links rewritten as in the filing package; the spelling lint is listed for review only and flags only domain terms: AIFi, AUF, canonicalization, memristive, counterparty, asserter, ...).
-- `scripts/make-filing-package.py --number 9999`: 54 files, local lints clean.
+- `scripts/make-filing-package.py --number 9999`: 54 files, local lints clean (rebuilt as `--number 8454` with the new discussions-to on 2026-10-22 after the number was assigned; eipw 0 errors).
 
 ## Anvil rehearsal of the Sepolia evidence script
 

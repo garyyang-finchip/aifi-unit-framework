@@ -1,8 +1,8 @@
 # AIFi Unit Framework (AUF)
 
-Reference repository of the draft ERC **AIFi Unit Framework**: a registry and descriptor model through which any economic object in an AI-driven economy (a running agent, a static skill, a task with escrowed funds, a model license, a compute quota, a data right, a capital position, or any composition of these, including agent swarms) is named, bounded, described, observed, classified and valued as one whole.
+Reference repository of **ERC-8454: AIFi Unit Framework** (Draft): a registry and descriptor model through which any economic object in an AI-driven economy (a running agent, a static skill, a task with escrowed funds, a model license, a compute quota, a data right, a capital position, or any composition of these, including agent swarms) is named, bounded, described, observed, classified and valued as one whole.
 
-Status: Draft filed as ethereum/ERCs pull request #2095 (placeholder number 9999 until an editor assigns one). Discussion thread: https://ethereum-magicians.org/t/draft-erc-aifi-unit-framework-auf-boundary-roles-and-valuation-statements-for-ai-economic-units/30040. Reference implementation, schemas, vectors and worked examples are complete; the Sepolia evidence run is executed and recorded (see below).
+Status: Draft, number ERC-8454 assigned on ethereum/ERCs pull request #2095 (editor review pending). Discussion thread: https://ethereum-magicians.org/t/erc-8454-aifi-unit-framework/30040. Reference implementation, schemas, vectors and worked examples are complete; the Sepolia evidence run is executed and recorded (see below).
 
 ## What it is
 
@@ -18,7 +18,7 @@ Two small registries carry it on chain: `AUFUnitRegistry` (units, versions, cont
 ## Repository
 
 ```
-ERCS/erc-auf.md                      ERC text (source; filing package renames it to erc-<number>.md)
+ERCS/erc-auf.md                      ERC-8454 text (source; the filing package names it erc-8454.md)
 assets/erc-auf/
   contracts/                         AUFUnitRegistry, AUFAssertionRegistry, AUFTypes, AUFErrors,
                                      interfaces/, libraries/AUFValuationLib
@@ -45,7 +45,7 @@ forge build
 forge test
 npm run check          # rebuild examples, regenerate vectors, validate schemas, run the offline resolver
 npm run lint:erc       # eipw lint of the ERC text (spelling findings are listed, not gating)
-python3 scripts/make-filing-package.py --number 9999
+python3 scripts/make-filing-package.py --number 8454
 ```
 
 `forge` needs solc 0.8.30 (downloaded automatically) and the vendored `lib/forge-std` (1.9.7).
@@ -107,7 +107,7 @@ The full record (every transaction, the decoded registry state, the descriptors 
 ## Next steps
 
 1. Collect review feedback on the Magicians thread and the pull request and iterate.
-2. When an editor assigns a number, rename `ERCS/erc-auf.md` and `assets/erc-auf/` to that number and rebuild the filing package with `scripts/make-filing-package.py --number <n>`.
+2. Keep the pull request branch in step with this repository: after any change to `ERCS/erc-auf.md` or `assets/erc-auf/`, rebuild the filing package with `scripts/make-filing-package.py` (number 8454) and upload it to the branch.
 
 ## License
 
