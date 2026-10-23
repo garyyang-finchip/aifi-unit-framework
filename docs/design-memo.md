@@ -80,3 +80,16 @@ Decision: the framework neither assigns a global identity to underlying claims (
 - A composable method applied over unresolved candidates must not return a point `monetary` value: `interval` (counted once / counted separately, no point value) or `insufficient-evidence`. Receipts over composites list every claim group and candidate under `inputs.overlaps` with its treatment. Composability stays necessary and is explicitly not sufficient.
 - Worked example Units 8 to 11 and exception vector 7 (45.12 counted once; interval 45.12 to 90.24 or insufficient evidence when undeclared). The reference resolver rejects a point value over an unresolved overlap.
 - No contract change, no new dependency, method descriptors unchanged (the rule sits above the methods, in Section 10.6); the Sepolia record keeps the seven Units of the first run.
+
+### 2026-10-23: dependent evidence (Sections 6.4, 10.3 and 10.6)
+
+Prompted by the second review question on the Magicians thread: receipt V rests on observation O; O's asserter revokes O after finding a measurement error; V is active and unexpired. Should the resolver flag V, should Section 10.6 require the status of cited observations to be shown with the valuation, and how is evidence withdrawn because it was wrong told apart from an observation whose validity window ended after the valuation's as-of time?
+
+Decision: withdrawal propagates by presentation, not by status. An assertion's status belongs to its asserter alone (automatic cascading would let any observer silence any evaluator and would make statuses depend on a graph walk at write time), so the dependency is recorded where it arises and the consequence is placed where it is consumed.
+
+- Section 6.4: revocation and supersession act on one assertion and do not change the status of assertions that cite it; the evaluator is expected to supersede a receipt whose evidence was withdrawn.
+- Section 10.3: a receipt cites its observations by assertion id in `snapshot.observations` (SHOULD, when they are registered); a registered observation of the same subject version whose `contentHash` equals `snapshot.hash` counts as cited as well, which covers the receipts of the first Sepolia run.
+- Section 10.6: resolvers must present an evidence status with every receipt (`not-cited`, `withdrawn`, `superseded`, `unresolved`, `expired`, `supported`, first applicable row wins) and, per cited observation, its status and whether it was inside its validity window at the receipt's as-of time. A receipt on `withdrawn` evidence is never presented as current; its own status is unchanged. The end of a window after the as-of time is not withdrawal and never makes the receipt non-current.
+- Exception vector 8 (`O -> V -> revoke(O)`, with the contrast case) and registry behavior 8; registry test `testRevokedObservationLeavesDependentReceiptActive`; resolver evidence tests under `tools/test`.
+- Section 8.2 now states that the reconciliation equation is evaluated exactly on the decimal strings (no rounding, no binary floating point); the tools were corrected accordingly by an external contribution (repository pull request #1), which also introduced `npm run test:tools`.
+- No contract change, no schema change (`snapshot.observations` already existed), no new dependency; the Sepolia record is unchanged.

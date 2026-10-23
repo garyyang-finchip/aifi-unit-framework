@@ -73,7 +73,7 @@ function offlineSource() {
     async companions(unitId, version) {
       const u = byId.get(unitId);
       const base = u.file.replace(/\.json$/, '');
-      return fs.readdirSync(dir).filter((f) => f.startsWith(base + '.') && f !== u.file).map((f) => ({ file: f, doc: JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')) }));
+      return fs.readdirSync(dir).filter((f) => f.startsWith(base + '.') && f !== u.file).map((f) => ({ file: f, doc: JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')) })).filter(({ doc }) => doc.kind !== 'unit-definition');
     },
     async assertions() { return []; },
   };
@@ -118,27 +118,85 @@ function chainSource() {
     async assertions(unitId, version) {
       if (!assertions) return [];
       const n = Number(await assertions.assertionCount(unitId, version));
+      const lookup = async (id) => {
+        try { return assertionEntry(id, await assertions.assertionOf(id)); } catch (e) { return null; }
+      };
       const out = [];
       for (let i = 0; i < n; i++) {
         const id = await assertions.assertionAt(unitId, version, i);
-        const a = await assertions.assertionOf(id);
-        const entry = {
-          assertionId: id, kind: KIND[Number(a.kind)], status: STATUS[Number(a.status)], byController: a.byController,
-          asserter: a.asserter, profileId: a.profileId, contentHash: a.contentHash, contentURI: a.contentURI,
-          validFrom: Number(a.validFrom), validUntil: Number(a.validUntil), assertedAt: Number(a.assertedAt),
-          supersedes: a.supersedes, supersededBy: a.supersededBy,
-        };
-        const now = Math.floor(Date.now() / 1000);
-        entry.current = entry.status === 'active' && now >= entry.validFrom && (entry.validUntil === 0 || now <= entry.validUntil);
+        const entry = await lookup(id);
         if (entry.kind === 'valuation') {
           const c = await assertions.valuationCoreOf(id);
           entry.valuation = { methodId: c.methodId, interestId: c.interestId, assessmentBoundaryHash: c.assessmentBoundaryHash, snapshotHash: c.snapshotHash, resultKind: RESULT[Number(c.resultKind)], value: c.value.toString(), decimals: Number(c.decimals), denominationId: c.denominationId, asOf: Number(c.asOf), horizonEnd: Number(c.horizonEnd) };
         }
         out.push(entry);
       }
+      // dependent evidence (Section 10.6): resolved once every assertion of the version is known, so that an
+      // observation cited by content hash is found among them
+      for (const entry of out) {
+        if (entry.kind !== 'valuation') continue;
+        let doc = null;
+        try { doc = await this.fetch(entry.contentURI); } catch (e) { doc = null; }
+        entry.evidence = await evidenceOf(entry, doc, lookup, out);
+        if (entry.evidence.status === 'withdrawn') entry.current = false;
+      }
       return out;
     },
   };
+}
+
+// Envelope of an on-chain assertion as the resolver presents it (Section 6.4: current = active and inside its validity window).
+function assertionEntry(id, a) {
+  const entry = {
+    assertionId: id, kind: KIND[Number(a.kind)], status: STATUS[Number(a.status)], byController: a.byController,
+    asserter: a.asserter, profileId: a.profileId, contentHash: a.contentHash, contentURI: a.contentURI,
+    validFrom: Number(a.validFrom), validUntil: Number(a.validUntil), assertedAt: Number(a.assertedAt),
+    supersedes: a.supersedes, supersededBy: a.supersededBy,
+  };
+  const now = Math.floor(Date.now() / 1000);
+  entry.current = entry.status === 'active' && now >= entry.validFrom && (entry.validUntil === 0 || now <= entry.validUntil);
+  return entry;
+}
+
+// Evidence status of a valuation receipt (Section 10.6, dependent evidence). A receipt cites an observation by listing
+// its assertion id in snapshot.observations; a registered observation of the same subject version whose contentHash
+// equals snapshot.hash counts as cited as well (`siblings` are the assertions of that version). The statuses, from
+// weakest to strongest: supported (every cited observation is active and was inside its validity window at the
+// receipt's as-of time), expired (one was outside its window at the as-of time), unresolved (a citation cannot be
+// resolved or is not an observation), superseded, withdrawn (a cited observation is revoked). The end of an
+// observation's validity window after the as-of time is not withdrawal. The receipt's own status is never changed here.
+const EVIDENCE_RANK = { supported: 0, expired: 1, unresolved: 2, superseded: 3, withdrawn: 4 };
+
+async function evidenceOf(receipt, doc, lookup, siblings = []) {
+  const out = { status: 'not-cited', observations: [], contentVerified: null };
+  if (doc) out.contentVerified = canonicalHash(doc) === receipt.contentHash;
+  if (!doc || !doc.snapshot) return out;
+  const cited = new Map(); // assertion id -> how the receipt cites it
+  for (const id of Array.isArray(doc.snapshot.observations) ? doc.snapshot.observations : []) cited.set(String(id).toLowerCase(), 'listed');
+  if (typeof doc.snapshot.hash === 'string') {
+    for (const s of siblings) {
+      if (s.kind !== 'observation' || !s.contentHash || s.contentHash.toLowerCase() !== doc.snapshot.hash.toLowerCase()) continue;
+      if (!cited.has(s.assertionId.toLowerCase())) cited.set(s.assertionId.toLowerCase(), 'content-hash');
+    }
+  }
+  if (!cited.size) return out;
+  const asOf = doc.snapshot.asOf ? Math.floor(Date.parse(doc.snapshot.asOf) / 1000) : (receipt.valuation ? receipt.valuation.asOf : 0);
+  const now = Math.floor(Date.now() / 1000);
+  let status = 'supported';
+  const raise = (s) => { if (EVIDENCE_RANK[s] > EVIDENCE_RANK[status]) status = s; };
+  for (const [id, citedBy] of cited) {
+    const o = await lookup(id);
+    if (!o) { out.observations.push({ assertionId: id, citedBy, status: 'unknown' }); raise('unresolved'); continue; }
+    const withinWindowAtAsOf = asOf >= o.validFrom && (o.validUntil === 0 || asOf <= o.validUntil);
+    const endedAfterAsOf = o.validUntil !== 0 && o.validUntil >= asOf && o.validUntil < now;
+    out.observations.push({ assertionId: id, citedBy, kind: o.kind, status: o.status, supersededBy: o.status === 'superseded' ? o.supersededBy : undefined, validFrom: o.validFrom, validUntil: o.validUntil, withinWindowAtAsOf, endedAfterAsOf });
+    if (o.kind !== 'observation') { raise('unresolved'); continue; }
+    if (o.status === 'revoked') raise('withdrawn');
+    else if (o.status === 'superseded') raise('superseded');
+    else if (!withinWindowAtAsOf) raise('expired');
+  }
+  out.status = status;
+  return out;
 }
 
 // ----------------------------------------------------------------------------- resolution
@@ -237,7 +295,13 @@ async function resolveUnit(src, unitId, version, report, pathSoFar = [], depth =
     const entry = { file, kind: cdoc.kind, contentHash: canonicalHash(cdoc), subjectMatches: cdoc.subject && cdoc.subject.boundaryHash === v.boundaryHash, doc: cdoc };
     checkExtensions(cdoc, `${file}`, report);
     if (cdoc.kind === 'observation') entry.problems = checkObservation(cdoc);
-    if (cdoc.kind === 'valuation') entry.summary = { interest: cdoc.interest.id, perspective: cdoc.interest.perspective, method: cdoc.method.name || cdoc.method.id, resultKind: cdoc.result.kind, value: cdoc.result.value, denomination: cdoc.result.denomination, assessmentBoundaryDiffers: !!(cdoc.assessmentBoundary && cdoc.assessmentBoundary.hash !== cdoc.subject.boundaryHash) };
+    if (cdoc.kind === 'valuation') {
+      entry.summary = { interest: cdoc.interest.id, perspective: cdoc.interest.perspective, method: cdoc.method.name || cdoc.method.id, resultKind: cdoc.result.kind, value: cdoc.result.value, denomination: cdoc.result.denomination, assessmentBoundaryDiffers: !!(cdoc.assessmentBoundary && cdoc.assessmentBoundary.hash !== cdoc.subject.boundaryHash) };
+      // offline: there is no registry state, so statuses are unknown; report which observation record (by content
+      // hash) the snapshot rests on. Statuses are resolved in chain mode (evidenceOf).
+      const obs = companions.find(({ doc: d }) => d.kind === 'observation' && cdoc.snapshot && canonicalHash(d) === cdoc.snapshot.hash);
+      entry.evidence = obs ? { status: 'supported', citedBy: 'content-hash', observation: obs.file } : { status: cdoc.snapshot && Array.isArray(cdoc.snapshot.observations) && cdoc.snapshot.observations.length ? 'unresolved' : 'not-cited' };
+    }
     node.companions.push(entry);
   }
   node.assertions = await src.assertions(unitId, version);
@@ -304,6 +368,56 @@ function checkReceiptsAgainstOverlaps(root, candidates) {
   return problems;
 }
 
+// Resolves one Unit version with a source and returns the summary (used by main and by tools/test-resolve.js).
+async function resolveSummary(src, unitId, version) {
+  const report = { nodes: [], partial: [], unsupported: [], elementIndex: new Map(), underlying: new Map(), claimDeclarations: [] };
+  const root = await resolveUnit(src, unitId, version, report);
+  const { groups, groupOf } = claimGroups(report);
+  const candidates = overlapCandidates(report, groupOf);
+  const overlapProblems = checkReceiptsAgainstOverlaps(root, candidates);
+  let problems = report.unsupported.length + overlapProblems.length;
+  for (const n of report.nodes) problems += n.problems.length + (n.companions || []).reduce((a, c) => a + (c.problems ? c.problems.length : 0), 0);
+  return { root, partial: report.partial, unsupported: report.unsupported, claimGroups: groups, unresolvedOverlaps: candidates, overlapProblems, problems, note: 'Valuations are listed per interest, denomination and assessment boundary and are never aggregated by this resolver.' };
+}
+
+// Text presentation of a summary (what `node tools/resolve.js` prints without --json).
+function printSummary(s, log = console.log) {
+  const print = (n, indent) => {
+    log(`${' '.repeat(indent)}unit ${n.unitId}@${n.version} ${n.name ? JSON.stringify(n.name) : ''} ${n.verified ? 'verified' : 'UNVERIFIED'} controller=${n.controller}`);
+    for (const p of n.problems) log(`${' '.repeat(indent + 2)}! ${p}`);
+    for (const c of n.companions || []) {
+      const extra = c.summary ? ` ${c.summary.interest} (${c.summary.perspective}) ${c.summary.resultKind}${c.summary.value !== undefined ? ' ' + c.summary.value + ' ' + (c.summary.denomination || '') : ''}` : '';
+      const ev = c.evidence && c.evidence.status !== 'not-cited' ? ` evidence=${c.evidence.status}${c.evidence.observation ? ' (' + c.evidence.observation + ')' : ''}` : '';
+      log(`${' '.repeat(indent + 2)}- ${c.kind}: ${c.file}${c.subjectMatches ? '' : ' [subject mismatch]'}${extra}${ev}`);
+      for (const p of c.problems || []) log(`${' '.repeat(indent + 4)}! ${p}`);
+    }
+    for (const a of n.assertions || []) {
+      const ev = a.evidence && a.evidence.status !== 'not-cited' ? ` evidence=${a.evidence.status}` : '';
+      log(`${' '.repeat(indent + 2)}- ${a.kind} ${a.assertionId} ${a.status}${a.current ? '' : ' (not current)'} by ${a.asserter}${a.byController ? ' [controller]' : ''}${a.valuation ? ` ${a.valuation.resultKind} ${a.valuation.value}e-${a.valuation.decimals}` : ''}${ev}`);
+      for (const o of (a.evidence && a.evidence.observations) || []) {
+        const why = o.status === 'unknown' ? 'not found in this registry'
+          : o.kind !== 'observation' ? `resolves to a ${o.kind}, not to an observation`
+          : o.status === 'revoked' ? 'withdrawn by its asserter; the receipt rests on withdrawn evidence and is not presented as current'
+          : o.status === 'superseded' ? `superseded by ${o.supersededBy}; compare the receipt with the superseding record`
+          : !o.withinWindowAtAsOf ? 'outside its validity window at the receipt\'s as-of time; the receipt rests on evidence that was not current when it was made'
+          : o.endedAfterAsOf ? 'validity ended after the receipt\'s as-of time; not a withdrawal, the receipt stands as of its as-of time'
+          : 'active';
+        log(`${' '.repeat(indent + 6)}cites observation ${o.assertionId}${o.citedBy === 'content-hash' ? ' (by content hash)' : ''} ${o.status}: ${why}`);
+      }
+    }
+    for (const ch of n.children) print(ch, indent + 2);
+  };
+  print(s.root, 0);
+  for (const g of s.claimGroups) {
+    const how = g.declaredBy.length ? `declared same-claim in ${g.declaredBy.map((d) => d.in).join(', ')} (basis ${g.declaredBy.map((d) => d.basis.join(', ')).join('; ')})` : 'same element id';
+    log(`  claim group {${g.members.map((m) => m.slice(0, 10)).join(', ')}} appears ${g.occurrences.length} times (${how}): ${g.occurrences.map((o) => `${o.path}${o.relation ? ` [${o.relation.type}${o.relation.share ? ' share ' + o.relation.share : ''}]` : ''}`).join('; ')} -> count once at the parent`);
+  }
+  for (const c of s.unresolvedOverlaps) log(`  UNRESOLVED OVERLAP: ${c.elements[0]} (${c.where[0].join(', ')}) and ${c.elements[1]} (${c.where[1].join(', ')}) share the underlying ${c.underlying} and carry no same-claim or distinct-claim declaration -> no point value admissible; interval or insufficient-evidence only`);
+  for (const p of s.overlapProblems) log(`  ! ${p}`);
+  for (const u of s.unsupported) log(`  UNSUPPORTED required extension ${u.extension} at ${u.where}`);
+  for (const p of s.partial) log(`  PARTIAL: ${p.unitId}@${p.version}: ${p.reason}`);
+}
+
 async function main() {
   const src = has('--rpc') ? chainSource() : offlineSource();
   const unitIds = has('--unit') ? [Number(arg('--unit'))] : src.allUnitIds();
@@ -311,42 +425,15 @@ async function main() {
   const out = [];
   let problems = 0;
   for (const unitId of unitIds) {
-    const report = { nodes: [], partial: [], unsupported: [], elementIndex: new Map(), underlying: new Map(), claimDeclarations: [] };
-    const root = await resolveUnit(src, unitId, version, report);
-    const { groups, groupOf } = claimGroups(report);
-    const candidates = overlapCandidates(report, groupOf);
-    const overlapProblems = checkReceiptsAgainstOverlaps(root, candidates);
-    const summary = { root, partial: report.partial, unsupported: report.unsupported, claimGroups: groups, unresolvedOverlaps: candidates, overlapProblems, note: 'Valuations are listed per interest, denomination and assessment boundary and are never aggregated by this resolver.' };
+    const summary = await resolveSummary(src, unitId, version);
     out.push(summary);
-    for (const n of report.nodes) problems += n.problems.length + (n.companions || []).reduce((a, c) => a + (c.problems ? c.problems.length : 0), 0);
-    problems += report.unsupported.length + overlapProblems.length;
+    problems += summary.problems;
   }
   if (has('--json')) { console.log(JSON.stringify(out, (k, v) => (k === 'doc' ? undefined : typeof v === 'bigint' ? v.toString() : v), 2)); }
-  else {
-    for (const s of out) {
-      const print = (n, indent) => {
-        console.log(`${' '.repeat(indent)}unit ${n.unitId}@${n.version} ${n.name ? JSON.stringify(n.name) : ''} ${n.verified ? 'verified' : 'UNVERIFIED'} controller=${n.controller}`);
-        for (const p of n.problems) console.log(`${' '.repeat(indent + 2)}! ${p}`);
-        for (const c of n.companions || []) {
-          const extra = c.summary ? ` ${c.summary.interest} (${c.summary.perspective}) ${c.summary.resultKind}${c.summary.value !== undefined ? ' ' + c.summary.value + ' ' + (c.summary.denomination || '') : ''}` : '';
-          console.log(`${' '.repeat(indent + 2)}- ${c.kind}: ${c.file}${c.subjectMatches ? '' : ' [subject mismatch]'}${extra}`);
-          for (const p of c.problems || []) console.log(`${' '.repeat(indent + 4)}! ${p}`);
-        }
-        for (const a of n.assertions || []) console.log(`${' '.repeat(indent + 2)}- ${a.kind} ${a.assertionId} ${a.status}${a.current ? '' : ' (not current)'} by ${a.asserter}${a.byController ? ' [controller]' : ''}${a.valuation ? ` ${a.valuation.resultKind} ${a.valuation.value}e-${a.valuation.decimals}` : ''}`);
-        for (const ch of n.children) print(ch, indent + 2);
-      };
-      print(s.root, 0);
-      for (const g of s.claimGroups) {
-        const how = g.declaredBy.length ? `declared same-claim in ${g.declaredBy.map((d) => d.in).join(', ')} (basis ${g.declaredBy.map((d) => d.basis.join(', ')).join('; ')})` : 'same element id';
-        console.log(`  claim group {${g.members.map((m) => m.slice(0, 10)).join(', ')}} appears ${g.occurrences.length} times (${how}): ${g.occurrences.map((o) => `${o.path}${o.relation ? ` [${o.relation.type}${o.relation.share ? ' share ' + o.relation.share : ''}]` : ''}`).join('; ')} -> count once at the parent`);
-      }
-      for (const c of s.unresolvedOverlaps) console.log(`  UNRESOLVED OVERLAP: ${c.elements[0]} (${c.where[0].join(', ')}) and ${c.elements[1]} (${c.where[1].join(', ')}) share the underlying ${c.underlying} and carry no same-claim or distinct-claim declaration -> no point value admissible; interval or insufficient-evidence only`);
-      for (const p of s.overlapProblems) console.log(`  ! ${p}`);
-      for (const u of s.unsupported) console.log(`  UNSUPPORTED required extension ${u.extension} at ${u.where}`);
-      for (const p of s.partial) console.log(`  PARTIAL: ${p.unitId}@${p.version}: ${p.reason}`);
-    }
-  }
+  else for (const s of out) printSummary(s);
   if (problems) { console.error(`${problems} problem(s) reported`); process.exit(1); }
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+module.exports = { resolveUnit, resolveSummary, claimGroups, overlapCandidates, checkReceiptsAgainstOverlaps, evidenceOf, assertionEntry, printSummary };
+
+if (require.main === module) main().catch((e) => { console.error(e); process.exit(1); });

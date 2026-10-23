@@ -10,7 +10,7 @@ The framework fixes three things and leaves the fourth open:
 
 1. **Boundary.** A Unit is a versioned Unit Definition: elements (agent, skill, task, service, model, compute, data, financial-position, nested unit), typed relations with the rights and obligations under which each element is included (owns, licenses, reserves, revenue-share, holds, owes, commits, pledges, depends-on, exchanges, controls, contains), economic interfaces (ports), authorities and validity. Positions declare what they are a claim against (`underlying`), and `same-claim` / `distinct-claim` declarations with a basis tell resolvers when two references are one entitlement; an undeclared overlap is reported and admits no point value. Each version is committed on chain by `boundaryHash = keccak256(JCS(definition))`.
 2. **Characterization.** Stackable economic roles (source, sink, conductor, damping, container, pledge, valve, control) attributed to the Unit, a port or an element under stated conditions; behavior attributes (linearity, determinism, time variance, memory) declared separately; behavior models (the financial-circuit analysis profile among them); structure profiles (simple, composite, chip); application profiles (credit); explicit knowledge states (classified, unclassified, insufficient-evidence, not-applicable).
-3. **Measurement and valuation statements.** Observation records (per-asset stocks, port transfers, minting, burning, adjustments, non-cash changes, coverage; missing is never zero) and valuation receipts (subject version, assessment boundary, interest and perspective, snapshot, content-addressed method, inputs incl. the treatment of every claim group and overlap candidate, typed result incl. negative, interval, scenario, score, grade and "cannot value").
+3. **Measurement and valuation statements.** Observation records (per-asset stocks, port transfers, minting, burning, adjustments, non-cash changes, coverage; missing is never zero; reconciliation exact on the decimal strings) and valuation receipts (subject version, assessment boundary, interest and perspective, snapshot with the observations it cites, content-addressed method, inputs incl. the treatment of every claim group and overlap candidate, typed result incl. negative, interval, scenario, score, grade and "cannot value"). Resolvers present every receipt with the status of its cited evidence; a receipt whose observation was revoked is shown as resting on withdrawn evidence and is not presented as current.
 4. **Open:** the valuation functions, behavior models and credit models themselves. Methods are content-addressed descriptors; any evaluator can plug in any method while every reader still understands what a figure refers to.
 
 Two small registries carry it on chain: `AUFUnitRegistry` (units, versions, containment of pinned versions, definition control, typed acknowledgments) and `AUFAssertionRegistry` (one assertion envelope for characterizations, observations, valuations and extensions, with validity, revocation, supersession, EIP-712/ERC-1271 signed assertions, and content-addressed descriptors).
@@ -27,8 +27,9 @@ assets/erc-auf/
   vectors/                           interface ids, identifiers, canonicalization, valuation vectors,
                                      EIP-712 vector, example hashes, methods/ (4 method descriptors)
   examples/                          11 worked Units with characterizations, observations and receipts
-test/                                Foundry suite (57 tests) incl. ethers <-> solc vector cross-checks
-tools/                               build-examples.js, vectors.js, validate.js, resolve.js, lint-erc.js
+test/                                Foundry suite (58 tests) incl. ethers <-> solc vector cross-checks
+tools/                               build-examples.js, vectors.js, validate.js, resolve.js, lint-erc.js,
+                                     lib/ (canonicalization, exact decimals), test/ (node --test suites)
 script/SepoliaEvidence.s.sol         four-phase evidence run (deploy, register, assert, lifecycle)
 tools/sepolia/sign-plan.js           turns the rehearsal's broadcast records into signed transactions for a relay
 deployments/                         sepolia.json (run record), sepolia/ (published descriptors, decoded state)
@@ -73,7 +74,7 @@ Method ids of the four reference valuation profiles are in `assets/erc-auf/vecto
 | Conditional payoff | 0.6 x 100 + 0.4 x 0 at 10%, one period | 54.55 |
 | Conditional payoff (obligation) | 0.4 x (-100) + 0.6 x 0 at 10%, one period | -36.36 |
 
-Exception vectors (missing evidence, boundary change, internal transfer, shared right, expired or revoked evidence, unsupported extension) are described in the ERC Test Cases and exercised by the examples, the tests and the resolver.
+Exception vectors (missing evidence, boundary change, internal transfer, shared right, expired or revoked evidence, unsupported extension, overlap under different references, withdrawn evidence) are described in the ERC Test Cases and exercised by the examples, the tests and the resolver; `tools/test/resolve-evidence.test.js` prints the expected resolver output for `O -> V -> revoke(O)`.
 
 ## Worked examples
 
@@ -85,8 +86,11 @@ Exception vectors (missing evidence, boundary change, internal transfer, shared 
 | 5 | `task-conditional-settlement.json` | escrow as container, pledge, valve, conductor; bounty balance, fulfillment claim and buyer obligation valued separately |
 | 6 | `contingent-obligation-unit.json` | no cash flow, contingent obligation; negative scenario value and an insufficient-evidence receipt |
 | 7 | `agent-chip.json` | a running agent packaged as a chip with a financial-circuit model statement and the credit profile |
+| 8, 9 | `revenue-right-token.json`, `revenue-right-contract.json` | one 40% revenue entitlement held as a token position and as a contractual right: different element ids, same `underlying` |
+| 10 | `revenue-holdings-declared.json` | a fund holding both, declaring `same-claim` with a basis; net equity 45.12 (counted once) |
+| 11 | `revenue-holdings-undeclared.json` | an analyst's composite of both with no declaration: unresolved overlap; interval 45.12 to 90.24 or insufficient evidence, never a point value |
 
-`node tools/resolve.js` resolves them offline; `node tools/resolve.js --rpc ... --registry ... --assertions ... --unit N` resolves a deployment.
+`node tools/resolve.js` resolves them offline; `node tools/resolve.js --rpc ... --registry ... --assertions ... --unit N` resolves a deployment, listing every assertion with its status and every receipt with the evidence status of the observations it cites.
 
 ## Position in the standards family
 

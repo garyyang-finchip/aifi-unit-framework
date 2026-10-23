@@ -327,6 +327,37 @@ contract AUFAssertionRegistryTest is Test {
         assertEq(reg.assertionOf(second).supersedes, first);
     }
 
+    // Exception vector "Withdrawn evidence": O -> V -> revoke(O). The registry keeps V active; only V's asserter can
+    // change V. The evidence status of V (withdrawn) is a resolver presentation rule (Section 10.6), not a registry state.
+    function testRevokedObservationLeavesDependentReceiptActive() public {
+        address observer = makeAddr("observer");
+        vm.prank(observer);
+        bytes32 o = reg.assertStatement(_observation(1, 1, 1_690_000_000, 1_699_999_999));
+        (AssertionInput memory v, ValuationCore memory core) = _valuation(1, 1, AUFResultKind.MONETARY, 7000);
+        core.snapshotHash = reg.observationCoreOf(o).snapshotHash; // the receipt pins the observation's snapshot
+        v.payload = abi.encode(core);
+        vm.prank(evaluator);
+        bytes32 vId = reg.assertStatement(v);
+
+        vm.prank(observer);
+        reg.revoke(o);
+
+        assertEq(uint8(reg.assertionOf(o).status), uint8(AssertionStatus.Revoked));
+        assertEq(uint8(reg.assertionOf(vId).status), uint8(AssertionStatus.Active)); // V is not touched by O's revocation
+        assertEq(reg.valuationCoreOf(vId).snapshotHash, reg.observationCoreOf(o).snapshotHash); // still resolves to O's snapshot
+        assertEq(reg.assertionCount(1, 1), 2); // both stay listed under the version
+        // the observer cannot withdraw the receipt; the evaluator can, or can supersede it with a receipt on new evidence
+        vm.prank(observer);
+        vm.expectRevert(abi.encodeWithSelector(AUF_NotAsserter.selector, vId, observer));
+        reg.revoke(vId);
+        (AssertionInput memory v2,) = _valuation(1, 1, AUFResultKind.INSUFFICIENT_EVIDENCE, 0);
+        v2.supersedes = vId;
+        vm.prank(evaluator);
+        bytes32 v2Id = reg.assertStatement(v2);
+        assertEq(uint8(reg.assertionOf(vId).status), uint8(AssertionStatus.Superseded));
+        assertEq(reg.assertionOf(vId).supersededBy, v2Id);
+    }
+
     function testSupersedeMismatchesRevert() public {
         vm.prank(evaluator);
         bytes32 first = reg.assertStatement(_char(1, 1));
