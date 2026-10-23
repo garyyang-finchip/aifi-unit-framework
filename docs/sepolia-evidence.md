@@ -113,3 +113,12 @@ node tools/resolve.js --rpc $SEPOLIA_RPC_URL --registry 0xE4EcAf6f87A700962f33AA
 ```
 
 The resolver fetches each descriptor from its on-chain URI (`https://raw.githubusercontent.com/garyyang-finchip/aifi-unit-framework/main/deployments/sepolia/...`), recomputes the canonical hash and compares it with the registered boundary hash or content hash, expands the containment of Unit 4 by pinned versions and lists every assertion with its status and core. The files under `deployments/sepolia/examples` and `deployments/sepolia/vectors` are the exact documents those URIs serve; `assets/erc-auf/examples` keeps the placeholder-registry versions used by the test suite and the ERC text.
+
+The same descriptors can be resolved offline with `node tools/resolve.js --examples deployments/sepolia/examples --unit 1` (and `--unit 4`).
+
+### What later revisions of the text say about this run
+
+The run predates two revisions of the ERC text and is kept as recorded; the resolver applies the current rules to it:
+
+- Dependent evidence (Section 10.6, revision of 2026-10-23): the receipts of Units 1, 6 and 7 rest on observations recorded on chain and cite them by content hash (`snapshot.hash` equals the observation's `contentHash`), so the resolver presents them with evidence status `supported`; no observation of the run has been revoked. Nothing in the run was re-issued.
+- Additivity must be established (Sections 3.8 and 10.6, revision of 2026-10-24): the registered definitions of Units 1 and 4 carry no `distinct-claim` declaration, so the resolver reports their positions as unresolved pairs (ten in Unit 1, six in Unit 4) and reports a net-equity receipt that nets a treasury balance against a payable as a point value over an unresolved pair: offline, over the frozen descriptors, both net-equity receipts; on chain, only the active one of Unit 4, because Unit 1's was revoked in the lifecycle phase of the run and is presented as revoked. This is the rule working as intended on definitions written before it existed. The current worked examples carry one set-form `distinct-claim` declaration per definition; re-registering the two Units under new versions with that declaration, and re-issuing the two receipts, is a six-transaction follow-up that has not been run.

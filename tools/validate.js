@@ -2,7 +2,7 @@
 'use strict';
 // Validates the example documents and method descriptors against the JSON Schemas of the ERC assets,
 // and checks the structural rules that schemas cannot express (element id uniqueness, relation endpoints,
-// claim declarations, observation reconciliation, subject hashes, unresolved overlaps against point values).
+// claim declarations incl. the set form, observation reconciliation, subject hashes, unresolved pairs against point values).
 
 const fs = require('fs');
 const path = require('path');
@@ -67,19 +67,26 @@ for (const { file, doc } of docs) {
       ids.set(id, e);
     }
     for (const r of doc.relations) {
-      for (const end of [r.from, r.to]) {
-        if (end !== 'unit' && !ids.has(end)) fail(file, `relation ${r.type} references unknown endpoint ${end}`);
+      const identity = r.type === 'same-claim' || r.type === 'distinct-claim';
+      if (Array.isArray(r.elements)) {
+        // set form (Section 3.4): identity relations only, every member an element of this definition
+        if (!identity) fail(file, `relation ${r.type} uses the set form, which is reserved for identity relations`);
+        if (r.from !== undefined || r.to !== undefined) fail(file, `relation ${r.type} mixes the set form with from/to`);
+        if (new Set(r.elements).size !== r.elements.length) fail(file, `${r.type} set lists an element twice`);
+        for (const id of r.elements) if (!ids.has(id)) fail(file, `${r.type} set references unknown element ${id}`);
+      } else {
+        for (const end of [r.from, r.to]) {
+          if (end !== 'unit' && !ids.has(end)) fail(file, `relation ${r.type} references unknown endpoint ${end}`);
+        }
+        if (r.from === r.to) fail(file, `relation ${r.type} is a self-loop`);
+        if (identity && (r.from === 'unit' || r.to === 'unit')) fail(file, `${r.type} must link two elements`);
       }
       if (r.type === 'contains') {
         const to = ids.get(r.to);
         if (!to || to.kind !== 'unit') fail(file, `contains must point to a unit element`);
         if (r.from !== 'unit') fail(file, `contains must start at the unit`);
       }
-      if (r.from === r.to) fail(file, `relation ${r.type} is a self-loop`);
-      if (r.type === 'same-claim' || r.type === 'distinct-claim') {
-        if (r.from === 'unit' || r.to === 'unit') fail(file, `${r.type} must link two elements`);
-        if (!Array.isArray(r.basis) || r.basis.length === 0) fail(file, `${r.type} requires a basis`);
-      }
+      if (identity && (!Array.isArray(r.basis) || r.basis.length === 0)) fail(file, `${r.type} requires a basis`);
     }
     const portIds = new Set();
     for (const p of doc.ports) {
@@ -132,9 +139,12 @@ for (const { file, doc } of docs) {
       if (['not-valuable', 'insufficient-evidence', 'not-applicable'].includes(r.kind) && r.value !== undefined) {
         fail(file, 'result kind without value carries a value');
       }
-      // Section 10.6: an unresolved overlap admits no point value.
+      // Section 10.6: an unresolved pair admits no point value; a pair the evaluator resolves itself needs a basis.
       const unresolved = (doc.inputs.overlaps || []).filter((o) => o.treatment === 'unresolved');
-      if (unresolved.length && r.kind === 'monetary') fail(file, 'monetary result although an overlap is listed as unresolved');
+      if (unresolved.length && r.kind === 'monetary') fail(file, 'monetary result although a pair is listed as unresolved');
+      for (const o of doc.inputs.overlaps || []) {
+        if ((o.treatment === 'distinct' || o.treatment === 'counted-once') && (!Array.isArray(o.basis) || o.basis.length === 0)) fail(file, `overlap treatment ${o.treatment} without a basis`);
+      }
       if (r.kind === 'interval' && (r.low === undefined || r.high === undefined)) fail(file, 'interval result without low and high');
     }
   }

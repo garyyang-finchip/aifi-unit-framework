@@ -4,12 +4,13 @@
 //
 // Offline mode (default): resolves the worked examples from assets/erc-auf/examples using manifest.json
 // as the "registry" (unitId -> definition file), verifies hashes, expands containment by pinned versions,
-// groups elements into claim groups (same element id or declared same-claim), reports unresolved overlap
-// candidates (same underlying, no declaration), checks observation reconciliation and the point-value rule for
-// receipts over unresolved overlaps, and reports required extensions it does not know.
+// groups elements into claim groups (same element id or declared same-claim), resolves every pair of positions
+// (declared distinct, or unresolved; overlap candidates marked), checks observation reconciliation and the
+// point-value rule for receipts over unresolved pairs, and reports required extensions it does not know.
 //
 //   node tools/resolve.js                       all example units
 //   node tools/resolve.js --unit 4              one example unit
+//   node tools/resolve.js --examples deployments/sepolia/examples --unit 1    the descriptors of the Sepolia run
 //
 // On-chain mode: reads a deployed Unit Registry and Assertion Registry.
 //
@@ -51,8 +52,8 @@ const RESULT = ['unspecified', 'monetary', 'interval', 'distribution', 'scenario
 
 // ----------------------------------------------------------------------------- sources
 
-function offlineSource() {
-  const dir = path.join(__dirname, '..', 'assets', 'erc-auf', 'examples');
+function offlineSource(examplesDir) {
+  const dir = examplesDir || arg('--examples', path.join(__dirname, '..', 'assets', 'erc-auf', 'examples'));
   const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
   const byId = new Map(manifest.units.map((u) => [u.unitId, u]));
   return {
@@ -99,6 +100,10 @@ function chainSource() {
       }
       return { boundaryHash, descriptorURI, contains, controller: await units.controllerOf(unitId), latest };
     },
+    // description-endorsement (AckKind 4) of an element of a version by an account (Section 3.8 confirmation)
+    async endorsedBy(unitId, version, elementId, account) {
+      return Number(await units.acknowledgedAt(unitId, version, elementId, 4, account)) > 0;
+    },
     async fetch(uri) {
       if (uri.startsWith('data:')) {
         const m = /^data:([^,;]*)(;base64)?,(.*)$/s.exec(uri);
@@ -137,6 +142,7 @@ function chainSource() {
         if (entry.kind !== 'valuation') continue;
         let doc = null;
         try { doc = await this.fetch(entry.contentURI); } catch (e) { doc = null; }
+        entry.doc = doc; // kept for the Section 10.6 checks; stripped from --json output
         entry.evidence = await evidenceOf(entry, doc, lookup, out);
         if (entry.evidence.status === 'withdrawn') entry.current = false;
       }
@@ -260,7 +266,8 @@ async function resolveUnit(src, unitId, version, report, pathSoFar = [], depth =
       node.elements.push({ elementId: id, kind: e.kind, ref: e.ref, label: e.label });
       const key = id;
       if (!report.elementIndex.has(key)) report.elementIndex.set(key, []);
-      report.elementIndex.get(key).push({ path: [...pathSoFar, `${unitId}@${version}`], relation: null, label: e.label });
+      report.elementIndex.get(key).push({ path: [...pathSoFar, `${unitId}@${version}`], unitId, version, relation: null, label: e.label, controller: e.controller, underlying: e.underlying, counterparty: null });
+      if (e.kind === 'financial-position' && !report.positions.has(id)) report.positions.set(id, { kind: e.kind, ref: e.ref, label: e.label });
       if (e.underlying && e.underlying.ref) {
         const ukey = `${e.underlying.ref}${e.underlying.port ? '#' + e.underlying.port : ''}`;
         if (!report.underlying.has(ukey)) report.underlying.set(ukey, new Set());
@@ -268,13 +275,20 @@ async function resolveUnit(src, unitId, version, report, pathSoFar = [], depth =
       }
     }
     for (const r of doc.relations || []) {
-      for (const end of [r.from, r.to]) if (end !== 'unit' && !ids.has(end)) node.problems.push(`relation ${r.type} references unknown endpoint ${end}`);
-      if (r.type === 'licenses' || r.type === 'owns' || r.type === 'holds' || r.type === 'revenue-share') {
-        const hits = report.elementIndex.get(r.to);
-        if (hits) hits[hits.length - 1].relation = { type: r.type, share: r.share, exclusive: r.exclusive };
+      const identity = r.type === 'same-claim' || r.type === 'distinct-claim';
+      if (Array.isArray(r.elements)) {
+        // set form (Section 3.4): the relation holds between every pair of the listed elements
+        for (const id of r.elements) if (!ids.has(id)) node.problems.push(`${r.type} set references unknown element ${id}`);
+        if (identity && r.elements.length >= 2) report.claimDeclarations.push({ type: r.type, members: [...new Set(r.elements)], basis: r.basis || [], declaredIn: `${unitId}@${version}`, unitId, version });
+        continue;
       }
-      if ((r.type === 'same-claim' || r.type === 'distinct-claim') && r.from !== 'unit' && r.to !== 'unit') {
-        report.claimDeclarations.push({ type: r.type, a: r.from, b: r.to, basis: r.basis || [], declaredIn: `${unitId}@${version}` });
+      for (const end of [r.from, r.to]) if (end !== 'unit' && !ids.has(end)) node.problems.push(`relation ${r.type} references unknown endpoint ${end}`);
+      if (r.type === 'licenses' || r.type === 'owns' || r.type === 'holds' || r.type === 'revenue-share' || r.type === 'owes') {
+        const hits = report.elementIndex.get(r.to);
+        if (hits) { hits[hits.length - 1].relation = { type: r.type, share: r.share, exclusive: r.exclusive }; if (r.counterparty) hits[hits.length - 1].counterparty = r.counterparty; }
+      }
+      if (identity && r.from !== 'unit' && r.to !== 'unit') {
+        report.claimDeclarations.push({ type: r.type, members: [r.from, r.to], basis: r.basis || [], declaredIn: `${unitId}@${version}`, unitId, version });
       }
     }
     // containment: on-chain list must match the definition's contains relations
@@ -316,8 +330,8 @@ function claimGroups(report) {
   for (const id of report.elementIndex.keys()) parent.set(id, id);
   for (const d of report.claimDeclarations) {
     if (d.type !== 'same-claim') continue;
-    for (const x of [d.a, d.b]) if (!parent.has(x)) parent.set(x, x);
-    union(d.a, d.b);
+    for (const x of d.members) if (!parent.has(x)) parent.set(x, x);
+    for (let i = 1; i < d.members.length; i++) union(d.members[0], d.members[i]);
   }
   const groups = new Map();
   for (const id of parent.keys()) { const r = find(id); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(id); }
@@ -325,44 +339,113 @@ function claimGroups(report) {
   for (const members of groups.values()) {
     const occurrences = [];
     for (const id of members) for (const h of report.elementIndex.get(id) || []) occurrences.push({ elementId: id, path: h.path.join(' > '), relation: h.relation, label: h.label });
-    const declared = report.claimDeclarations.filter((d) => d.type === 'same-claim' && members.includes(d.a) && members.includes(d.b));
+    const declared = report.claimDeclarations.filter((d) => d.type === 'same-claim' && d.members.some((m) => members.includes(m)));
     if (occurrences.length > 1) out.push({ members, occurrences, declaredBy: declared.map((d) => ({ in: d.declaredIn, basis: d.basis })) });
   }
   return { groups: out, groupOf: (id) => (parent.has(id) ? find(id) : id) };
 }
 
-// Overlap candidates (Section 3.8): different claim groups, same underlying, no distinct-claim declaration between them.
-function overlapCandidates(report, groupOf) {
-  const distinct = new Set(report.claimDeclarations.filter((d) => d.type === 'distinct-claim').map((d) => [d.a, d.b].sort().join('|')));
-  const out = [];
-  for (const [ukey, idSet] of report.underlying.entries()) {
-    const ids = [...idSet];
-    for (let i = 0; i < ids.length; i++) {
-      for (let j = i + 1; j < ids.length; j++) {
-        if (groupOf(ids[i]) === groupOf(ids[j])) continue;
-        if (distinct.has([ids[i], ids[j]].sort().join('|'))) continue;
-        const where = (id) => (report.elementIndex.get(id) || []).map((h) => h.path.join(' > '));
-        out.push({ underlying: ukey, elements: [ids[i], ids[j]], where: [where(ids[i]), where(ids[j])] });
+// Pair resolution (Section 3.8). Every pair of positions (financial-position elements of the tree) that lies in two
+// different claim groups is either resolved as distinct, by a distinct-claim declaration found in a definition of the
+// tree, or an unresolved pair; an unresolved pair whose underlying references are equal is in addition an overlap
+// candidate. Nothing else (labels, shares, counterparties, missing or differing underlying references) resolves a pair.
+const pairKey = (a, b) => [a, b].sort().join('|');
+function pairResolution(report, groupOf) {
+  const underlyingOf = new Map();
+  for (const [ukey, idSet] of report.underlying.entries()) for (const id of idSet) underlyingOf.set(id, ukey);
+  const distinct = new Map(); // pair key -> declarations covering it
+  for (const d of report.claimDeclarations) {
+    if (d.type !== 'distinct-claim') continue;
+    for (let i = 0; i < d.members.length; i++) {
+      for (let j = i + 1; j < d.members.length; j++) {
+        const k = pairKey(d.members[i], d.members[j]);
+        if (!distinct.has(k)) distinct.set(k, []);
+        distinct.get(k).push(d);
       }
     }
   }
-  return out;
+  const where = (id) => (report.elementIndex.get(id) || []).map((h) => h.path.join(' > '));
+  const ids = [...report.positions.keys()];
+  const unresolved = [];
+  const resolved = [];
+  const contradictions = [];
+  for (let i = 0; i < ids.length; i++) {
+    for (let j = i + 1; j < ids.length; j++) {
+      const a = ids[i]; const b = ids[j];
+      const k = pairKey(a, b);
+      const sameGroup = groupOf(a) === groupOf(b);
+      const decl = distinct.get(k);
+      if (sameGroup) {
+        if (decl) contradictions.push({ elements: [a, b], declaredBy: decl.map((d) => ({ in: d.declaredIn, basis: d.basis })) });
+        continue;
+      }
+      const ua = underlyingOf.get(a); const ub = underlyingOf.get(b);
+      const sharedUnderlying = ua && ub && ua === ub ? ua : null;
+      if (decl) resolved.push({ elements: [a, b], sharedUnderlying, declaredBy: decl.map((d) => ({ in: d.declaredIn, unitId: d.unitId, version: d.version, basis: d.basis })), where: [where(a), where(b)] });
+      else unresolved.push({ elements: [a, b], sharedUnderlying, underlying: [ua || null, ub || null], where: [where(a), where(b)] });
+    }
+  }
+  return { unresolved, resolved, contradictions };
 }
 
-// Section 10.6: a receipt over a boundary with an unresolved overlap candidate must not carry a point monetary value
-// for an interest that would add the candidates, unless it states its own resolution of the pair with a basis.
-function checkReceiptsAgainstOverlaps(root, candidates) {
+// Confirmation of a declaration (Section 3.8): a description-endorsement of either element, on the declaring version,
+// by an account that controls the underlying (the element's controller, the relation's counterparty, or the
+// Definition Controller of the underlying Unit). Needs a source that can read acknowledgments; otherwise `claimed`.
+async function confirmDeclarations(src, report, pairs) {
+  const account = (caip) => { const m = /^eip155:\d+:(0x[0-9a-fA-F]{40})$/.exec(caip || ''); return m ? m[1].toLowerCase() : null; };
+  for (const pair of pairs) {
+    pair.confirmation = 'claimed';
+    if (!src.endorsedBy) continue;
+    const candidates = new Set();
+    for (const id of pair.elements) {
+      for (const h of report.elementIndex.get(id) || []) {
+        if (account(h.controller)) candidates.add(account(h.controller));
+        if (account(h.counterparty)) candidates.add(account(h.counterparty));
+        const u = h.underlying && parseUnitRef(h.underlying.ref);
+        if (u && u.registry.toLowerCase() === String(src.registry).toLowerCase()) {
+          try { const v = await src.version(u.unitId, u.version); if (v.controller) candidates.add(String(v.controller).toLowerCase()); } catch (e) { /* unknown underlying unit */ }
+        }
+      }
+    }
+    for (const d of pair.declaredBy) {
+      for (const id of pair.elements) {
+        for (const acct of candidates) {
+          if (await src.endorsedBy(d.unitId, d.version, id, acct)) { pair.confirmation = 'confirmed'; pair.confirmedBy = acct; }
+        }
+      }
+    }
+  }
+}
+
+// Section 10.6: a receipt must not carry a point monetary value while a pair of positions it adds is unresolved, unless
+// the receipt itself resolves the pair with a treatment and a basis. The positions a receipt adds are the elements its
+// method inputs name (method.params.assets / liabilities, inputs.data); a net-equity receipt that names no elements is
+// taken to add every position of the boundary. Receipts of flow-based methods (realized net cash flow) add no positions.
+const POSITION_ADDING = (doc) => (doc.method && doc.method.name === 'auf:method:net-equity@1') || (doc.interest && doc.interest.id === 'auf:interest:net-equity@1');
+function elementsUsed(doc) {
+  const out = new Set();
+  const params = (doc.method && doc.method.params) || {};
+  for (const list of [params.assets, params.liabilities, doc.inputs && doc.inputs.data]) {
+    for (const x of Array.isArray(list) ? list : []) if (x && typeof x.element === 'string') out.add(x.element.toLowerCase());
+  }
+  return out;
+}
+function checkReceiptsAgainstPairs(root, unresolved) {
   const problems = [];
-  if (!candidates.length) return problems;
-  for (const c of root.companions || []) {
+  if (!unresolved.length) return problems;
+  const receipts = [...(root.companions || []).map((c) => ({ ...c, label: c.file })), ...(root.assertions || []).filter((a) => a.status === 'active').map((a) => ({ ...a, label: `assertion ${a.assertionId}` }))];
+  for (const c of receipts) {
     if (c.kind !== 'valuation' || !c.doc) continue;
     const r = c.doc.result;
     if (r.kind !== 'monetary') continue;
+    const used = elementsUsed(c.doc);
+    const wholeBoundary = used.size === 0 && POSITION_ADDING(c.doc);
     const overlaps = (c.doc.inputs && c.doc.inputs.overlaps) || [];
-    for (const cand of candidates) {
-      const stated = overlaps.find((o) => cand.elements.every((e) => o.elements.includes(e)));
-      const resolved = stated && stated.treatment !== 'unresolved' && Array.isArray(stated.basis) && stated.basis.length > 0;
-      if (!resolved) problems.push(`${c.file}: point monetary value although the overlap ${cand.elements.join(' / ')} (underlying ${cand.underlying}) is unresolved`);
+    for (const pair of unresolved) {
+      if (!wholeBoundary && !pair.elements.every((e) => used.has(e.toLowerCase()))) continue;
+      const stated = overlaps.find((o) => pair.elements.every((e) => o.elements.includes(e)));
+      const resolved = stated && stated.treatment !== 'unresolved' && (stated.treatment === 'excluded' || stated.treatment === 'netted' || (Array.isArray(stated.basis) && stated.basis.length > 0));
+      if (!resolved) problems.push(`${c.label}: point monetary value although the pair ${pair.elements.join(' / ')} is unresolved${pair.sharedUnderlying ? ` (overlap candidate, underlying ${pair.sharedUnderlying})` : ' (no declaration covers it)'}`);
     }
   }
   return problems;
@@ -370,14 +453,16 @@ function checkReceiptsAgainstOverlaps(root, candidates) {
 
 // Resolves one Unit version with a source and returns the summary (used by main and by tools/test-resolve.js).
 async function resolveSummary(src, unitId, version) {
-  const report = { nodes: [], partial: [], unsupported: [], elementIndex: new Map(), underlying: new Map(), claimDeclarations: [] };
+  const report = { nodes: [], partial: [], unsupported: [], elementIndex: new Map(), positions: new Map(), underlying: new Map(), claimDeclarations: [] };
   const root = await resolveUnit(src, unitId, version, report);
   const { groups, groupOf } = claimGroups(report);
-  const candidates = overlapCandidates(report, groupOf);
-  const overlapProblems = checkReceiptsAgainstOverlaps(root, candidates);
+  const pairs = pairResolution(report, groupOf);
+  await confirmDeclarations(src, report, pairs.resolved);
+  const overlapProblems = checkReceiptsAgainstPairs(root, pairs.unresolved);
+  for (const c of pairs.contradictions) overlapProblems.push(`contradictory declarations: ${c.elements.join(' / ')} are one claim group and are also declared distinct (${c.declaredBy.map((d) => d.in).join(', ')})`);
   let problems = report.unsupported.length + overlapProblems.length;
   for (const n of report.nodes) problems += n.problems.length + (n.companions || []).reduce((a, c) => a + (c.problems ? c.problems.length : 0), 0);
-  return { root, partial: report.partial, unsupported: report.unsupported, claimGroups: groups, unresolvedOverlaps: candidates, overlapProblems, problems, note: 'Valuations are listed per interest, denomination and assessment boundary and are never aggregated by this resolver.' };
+  return { root, partial: report.partial, unsupported: report.unsupported, claimGroups: groups, unresolvedPairs: pairs.unresolved, distinctPairs: pairs.resolved, contradictions: pairs.contradictions, overlapProblems, problems, note: 'Valuations are listed per interest, denomination and assessment boundary and are never aggregated by this resolver.' };
 }
 
 // Text presentation of a summary (what `node tools/resolve.js` prints without --json).
@@ -412,7 +497,19 @@ function printSummary(s, log = console.log) {
     const how = g.declaredBy.length ? `declared same-claim in ${g.declaredBy.map((d) => d.in).join(', ')} (basis ${g.declaredBy.map((d) => d.basis.join(', ')).join('; ')})` : 'same element id';
     log(`  claim group {${g.members.map((m) => m.slice(0, 10)).join(', ')}} appears ${g.occurrences.length} times (${how}): ${g.occurrences.map((o) => `${o.path}${o.relation ? ` [${o.relation.type}${o.relation.share ? ' share ' + o.relation.share : ''}]` : ''}`).join('; ')} -> count once at the parent`);
   }
-  for (const c of s.unresolvedOverlaps) log(`  UNRESOLVED OVERLAP: ${c.elements[0]} (${c.where[0].join(', ')}) and ${c.elements[1]} (${c.where[1].join(', ')}) share the underlying ${c.underlying} and carry no same-claim or distinct-claim declaration -> no point value admissible; interval or insufficient-evidence only`);
+  // distinct pairs are printed per declaration (one set-form declaration usually covers many pairs)
+  const byDeclaration = new Map();
+  for (const d of s.distinctPairs) {
+    for (const x of d.declaredBy) {
+      const k = `${x.in}|${x.basis.join(',')}`;
+      if (!byDeclaration.has(k)) byDeclaration.set(k, { in: x.in, basis: x.basis, members: new Set(), pairs: 0, shared: 0, confirmation: d.confirmation, confirmedBy: d.confirmedBy });
+      const g = byDeclaration.get(k);
+      g.members.add(d.elements[0]); g.members.add(d.elements[1]); g.pairs++; if (d.sharedUnderlying) g.shared++;
+      if (d.confirmation === 'confirmed') { g.confirmation = 'confirmed'; g.confirmedBy = d.confirmedBy; }
+    }
+  }
+  for (const g of byDeclaration.values()) log(`  distinct (${g.confirmation}${g.confirmedBy ? ' by ' + g.confirmedBy : ''}): {${[...g.members].map((m) => m.slice(0, 10)).join(', ')}} declared distinct claims in ${g.in} (basis ${g.basis.join(', ')}): ${g.pairs} pair(s) resolved${g.shared ? `, ${g.shared} of them with a shared underlying` : ''} -> counted separately`);
+  for (const c of s.unresolvedPairs) log(`  UNRESOLVED PAIR: ${c.elements[0]} (${c.where[0].join(', ')}) and ${c.elements[1]} (${c.where[1].join(', ')})${c.sharedUnderlying ? ` share the underlying ${c.sharedUnderlying} (overlap candidate) and` : ` (underlying ${c.underlying[0] || 'not declared'} / ${c.underlying[1] || 'not declared'}; no overlap detected, which establishes nothing)`} carry no same-claim or distinct-claim declaration -> no point value admissible; interval or insufficient-evidence only`);
   for (const p of s.overlapProblems) log(`  ! ${p}`);
   for (const u of s.unsupported) log(`  UNSUPPORTED required extension ${u.extension} at ${u.where}`);
   for (const p of s.partial) log(`  PARTIAL: ${p.unitId}@${p.version}: ${p.reason}`);
@@ -434,6 +531,6 @@ async function main() {
   if (problems) { console.error(`${problems} problem(s) reported`); process.exit(1); }
 }
 
-module.exports = { resolveUnit, resolveSummary, claimGroups, overlapCandidates, checkReceiptsAgainstOverlaps, evidenceOf, assertionEntry, printSummary };
+module.exports = { offlineSource, resolveUnit, resolveSummary, claimGroups, pairResolution, confirmDeclarations, checkReceiptsAgainstPairs, evidenceOf, assertionEntry, printSummary };
 
 if (require.main === module) main().catch((e) => { console.error(e); process.exit(1); });

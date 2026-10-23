@@ -40,7 +40,7 @@ Commit and push the regenerated `assets/erc-auf/examples` and `vectors` to the r
 forge script script/SepoliaEvidence.s.sol --sig "registerAll()" --rpc-url $SEPOLIA_RPC_URL --broadcast
 ```
 
-Registers the four method descriptors (write-once) and the first seven Units in planned order (ids 1..7; Unit 4 contains 2@1 and 3@1). Units 8 to 11 of the current examples (the overlap vector) were added after the recorded run; the script registers the first seven so that it stays a faithful record of that run.
+Registers the four method descriptors (write-once) and the first seven Units in planned order (ids 1..7; Unit 4 contains 2@1 and 3@1). Units 8 to 13 of the current examples (the overlap and additivity vectors) were added after the recorded run, and Units 1 and 4 have since gained a `distinct-claim` declaration (their boundary hashes changed); the script registers the first seven of whatever `examples.json` contains, so a fresh run registers the current definitions while the recorded run stays as documented in `docs/sepolia-evidence.md`.
 
 ## Phase 4: assertions
 

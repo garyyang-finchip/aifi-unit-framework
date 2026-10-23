@@ -164,8 +164,8 @@ contract VectorsTest is Test {
     function testExamplesRegisterInPlannedOrder() public {
         string memory j = _json("examples.json");
         AUFUnitRegistry units = new AUFUnitRegistry();
-        uint256 n = 11;
-        assertFalse(vm.keyExistsJson(j, ".units[11]"), "unexpected extra example unit");
+        uint256 n = 13;
+        assertFalse(vm.keyExistsJson(j, ".units[13]"), "unexpected extra example unit");
         for (uint256 i = 0; i < n; i++) {
             _registerExample(units, j, i);
         }
@@ -182,6 +182,11 @@ contract VectorsTest is Test {
         assertEq(c11, 2);
         assertEq(units.containedAt(10, 1, 0).unitId, 8);
         assertEq(units.containedAt(11, 1, 1).unitId, 9);
+        // the additivity composites (12, 13) list their positions directly and contain nothing
+        (,,, uint256 c12) = units.versionOf(12, 1);
+        (,,, uint256 c13) = units.versionOf(13, 1);
+        assertEq(c12, 0);
+        assertEq(c13, 0);
     }
 
     function _registerExample(AUFUnitRegistry units, string memory j, uint256 i) internal {

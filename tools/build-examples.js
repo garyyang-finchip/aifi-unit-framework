@@ -57,6 +57,9 @@ const A = {
   fundDeskB: '0x00000000000000000000000000000000000000f9',
   fundTreasury: '0x00000000000000000000000000000000000000e8',
   analyst: '0x00000000000000000000000000000000000000d2',
+  analystB: '0x00000000000000000000000000000000000000d3',
+  fundG: '0x00000000000000000000000000000000000000fa',
+  fundGTreasury: '0x00000000000000000000000000000000000000e9',
 };
 const caip10 = (addr) => `eip155:${CHAIN}:${addr}`;
 const erc721 = (addr, id) => `eip155:${CHAIN}/erc721:${addr}/${id}`;
@@ -85,6 +88,10 @@ function strip(elements) {
 }
 function rel(type, from, to, extra = {}) {
   return { type, from: from === 'unit' ? 'unit' : from._id, to: to === 'unit' ? 'unit' : to._id, ...extra };
+}
+// Set form of an identity relation (Section 3.4): holds between every pair of the listed elements.
+function relSet(type, elements, extra = {}) {
+  return { type, elements: elements.map((e) => e._id), ...extra };
 }
 function definition({ name, summary, tags, elements, relations, ports, authorities, validity, scale, extensions, metadata }) {
   if (CONTROLLER_OVERRIDE) authorities = { ...authorities, definitionController: caip10(CONTROLLER_OVERRIDE) };
@@ -195,6 +202,12 @@ const manifest = { chainId: CHAIN, registry: REGISTRY, controllerOverride: CONTR
     rel('holds', 'unit', treasury),
     rel('exchanges', endpoint, agentA, { scope: 'invocations' }),
   ];
+  // Section 3.8: positions are additive only when declared distinct; one set-form declaration covers the five positions.
+  const distinct = (positions, agents) => relSet('distinct-claim', positions, {
+    scope: 'receivables from different licensees under separate agreements, one hosting invoice and one treasury account: five different claims',
+    basis: [...agents.map((a) => 'urn:x:agreement:' + a.ref), 'urn:x:invoice:hosting:2026-10', treasury.ref],
+  });
+  relations.push(distinct([licA, licB, licC, hostingPayable, treasury], [agentA, agentB, agentC]));
   const ports = [
     { id: 'service-out', direction: 'out', class: 'deliverable', template: 'auf:port:service-out@1', conditions: 'licensee holds a valid license' },
     { id: 'fees-in', direction: 'in', class: 'funds', template: 'auf:port:funds-in@1', asset: STABLE, account: caip10(A.treasury1), conditions: 'monthly license fee' },
@@ -291,7 +304,7 @@ const manifest = { chainId: CHAIN, registry: REGISTRY, controllerOverride: CONTR
     summary: doc.unit.summary + ' Version 2 adds a fourth licensee.',
     tags: ['skill', 'licensing'],
     elements: [...elements, agentD, licD],
-    relations: [...relations, ...license(agentD, licD)],
+    relations: [...relations.filter((r) => r.type !== 'distinct-claim'), ...license(agentD, licD), distinct([licA, licB, licC, licD, hostingPayable, treasury], [agentA, agentB, agentC, agentD])],
     ports,
     authorities: doc.authorities,
     validity: { from: '2026-01-01T00:00:00Z', until: '2026-12-31T23:59:59Z' },
@@ -341,7 +354,7 @@ function agentSubunit(unitId, letter, agentAddr, treasuryAddr) {
     knowledge: { status: 'classified' },
   });
   manifest.units.push({ unitId, name: doc.unit.name, file, boundaryHash, contains: [], elements: Object.fromEntries(elements.map((e) => [e.label || e.ref, e._id])), controller: CONTROLLER_OVERRIDE || agentAddr });
-  return { boundaryHash, skill };
+  return { boundaryHash, skill, treasury };
 }
 const subA = agentSubunit(2, 'A', A.agentA, A.treasuryA);
 const subB = agentSubunit(3, 'B', A.agentB, A.treasuryB);
@@ -358,7 +371,11 @@ const subB = agentSubunit(3, 'B', A.agentB, A.treasuryB);
   const modelFee = el('financial-position', 'urn:x:liability:model-subscription:2026-11', { label: 'Model subscription payable for November' });
   const task = el('task', erc721(A.taskToken, 17), { label: 'Task tender 17 (translation corpus), accepted by the swarm' });
   const treasury = el('financial-position', caip10(A.treasurySwarm), { label: 'Swarm treasury (swarm account)' });
-  const elements = [swarm, unitA, unitB, coordinator, model, modelFee, task, treasury];
+  // the sub-unit treasuries are reached through containment; they are listed here so that the swarm can state that the
+  // four positions inside its boundary are distinct claims (Section 3.8)
+  const treasuryA = el('financial-position', subA.treasury.ref, { label: 'Treasury of agent A (position of the contained sub-unit)' });
+  const treasuryB = el('financial-position', subB.treasury.ref, { label: 'Treasury of agent B (position of the contained sub-unit)' });
+  const elements = [swarm, unitA, unitB, coordinator, model, modelFee, task, treasury, treasuryA, treasuryB];
   const relations = [
     rel('depends-on', 'unit', swarm, { scope: 'membership, roles and charter are kept by the swarm registry; this Unit does not restate them' }),
     rel('contains', 'unit', unitA),
@@ -369,6 +386,10 @@ const subB = agentSubunit(3, 'B', A.agentB, A.treasuryB);
     rel('holds', 'unit', treasury),
     rel('controls', coordinator, treasury, { scope: 'budget decisions under the swarm charter' }),
     rel('exchanges', unitA, unitB, { scope: 'intermediate deliverables between the sub-units (internal transfer, crosses no port)' }),
+    relSet('distinct-claim', [treasury, modelFee, treasuryA, treasuryB], {
+      scope: 'three treasury accounts and one subscription payable: four different claims',
+      basis: [treasury.ref, treasuryA.ref, treasuryB.ref, 'urn:x:invoice:model-subscription:2026-11'],
+    }),
   ];
   const ports = [
     { id: 'deliverable-out', direction: 'out', class: 'deliverable', template: 'auf:port:deliverable-out@1', conditions: 'task deliveries' },
@@ -846,6 +867,110 @@ const subB = agentSubunit(3, 'B', A.agentB, A.treasuryB);
     notes: 'Exception vector "Overlap under different references", undeclared case, alternative statement to the interval receipt.',
   });
   manifest.units.push({ unitId: 11, name: docUndeclared.unit.name, file: 'revenue-holdings-undeclared.json', boundaryHash: undeclaredHash, contains: [{ unitId: 8, version: 1 }, { unitId: 9, version: 1 }], elements: Object.fromEntries([unit8, unit9].map((e) => [e.label || e.ref, e._id])), controller: CONTROLLER_OVERRIDE || A.analyst });
+
+  // ----------------------------------------------------------------------------- 12 and 13. Additivity must be established (exception vector 9)
+  // 12. References silent: the same two holdings listed directly, one without `underlying`, the other with an `underlying`
+  // that names the fee stream under another URI. No overlap candidate is detected; the pair is unresolved all the same.
+  const silentToken = el('financial-position', `eip155:${CHAIN}/erc20:${A.revenueToken}`, {
+    label: 'RST revenue-share tokens (no underlying declared)',
+  });
+  const aliasedContract = el('financial-position', 'https://fund-f.example/agreements/summarizer-fee-assignment', {
+    label: 'Assigned right to 40% of the Summarizer fee stream (agreement referenced by URL)',
+    underlying: { ref: 'https://skills.example/summarizer/v3#license-fees', share: '0.4', basis: ['https://fund-f.example/agreements/summarizer-fee-assignment'] },
+  });
+  const docSilent = definition({
+    name: 'Combined revenue holdings as seen by a second analyst (references silent)',
+    summary: 'A second analyst lists the token position without an underlying and the assignment under a different URI, with an underlying that names the fee stream under yet another URI, and declares nothing about their relation. No overlap candidate is detected. The pair is an unresolved pair nevertheless: nothing states that the two positions are distinct claims, so a point-valued sum is not admissible.',
+    tags: ['composite', 'additivity-vector'],
+    elements: [silentToken, aliasedContract],
+    relations: [rel('holds', 'unit', silentToken, { quantity: { amount: '400', unit: 'RST' } }), rel('holds', 'unit', aliasedContract, { share: '0.4' })],
+    ports: [],
+    authorities: { definitionController: caip10(A.analystB) },
+    scale: { window: 'P30D' },
+  });
+  const silentHash = canonicalHash(docSilent);
+  write('revenue-holdings-silent.json', docSilent);
+  write('revenue-holdings-silent.characterization.json', {
+    auf: '1.0', kind: 'characterization', subject: subject(12, 1, silentHash),
+    structure: { profile: 'auf:structure:composite@1' },
+    knowledge: { status: 'insufficient-evidence', notes: 'Neither position declares what the other is to it; no underlying matches; the absence of a detected overlap establishes nothing.' },
+  });
+  const silentOverlap = { elements: [silentToken._id, aliasedContract._id], treatment: 'unresolved', notes: 'no same-claim or distinct-claim declaration covers the pair; no overlap candidate was detected (one position has no underlying, the other names the fee stream under a URI that matches nothing), which does not establish that the claims are distinct' };
+  write('revenue-holdings-silent.valuation.net-equity.interval.json', {
+    auf: '1.0', kind: 'valuation', subject: subject(12, 1, silentHash), assessmentBoundary: { hash: silentHash },
+    interest: { id: 'auf:interest:net-equity@1', perspective: 'analyst' },
+    snapshot: { asOf: '2026-11-01T00:00:00Z', hash: snapshotHash },
+    method: { id: M.netEquity, name: 'auf:method:net-equity@1', params: { denomination: 'USD', assets: [priceInput(silentToken), priceInput(aliasedContract)], liabilities: [] } },
+    inputs: {
+      data: [{ element: silentToken._id, source: 'RST balance' }, { element: aliasedContract._id, source: 'assignment agreement (URL)' }, { receipt: dcfHash, use: 'value of the whole fee stream' }],
+      overlaps: [silentOverlap],
+      coverage: 'the two positions only',
+    },
+    result: { kind: 'interval', low: ENTITLEMENT_VALUE, high: TWICE, denomination: 'USD', decimals: 2 },
+    evaluator: caip10(A.evaluator),
+    notes: 'Exception vector "Additivity must be established", silent case: low = the pair counted once (45.12), high = counted separately (90.24); no point estimate, because nothing establishes that the two references are two claims.',
+  });
+  write('revenue-holdings-silent.valuation.net-equity.insufficient-evidence.json', {
+    auf: '1.0', kind: 'valuation', subject: subject(12, 1, silentHash), assessmentBoundary: { hash: silentHash },
+    interest: { id: 'auf:interest:net-equity@1', perspective: 'analyst' },
+    snapshot: { asOf: '2026-11-01T00:00:00Z', hash: snapshotHash },
+    method: { id: M.netEquity, name: 'auf:method:net-equity@1', params: { denomination: 'USD', assets: [priceInput(silentToken), priceInput(aliasedContract)], liabilities: [] } },
+    inputs: {
+      data: [{ element: silentToken._id }, { element: aliasedContract._id }],
+      overlaps: [{ elements: [silentToken._id, aliasedContract._id], treatment: 'unresolved' }],
+      missing: [{ item: `${silentToken._id} / ${aliasedContract._id}`, reason: 'distinctness of the two positions not established; a distinct-claim declaration with a basis (separate source agreements, different obligors or disjoint cash-flow schedules), or evidence of the same kind stated by the evaluator, is required before they can be added' }],
+      coverage: 'the two positions only',
+    },
+    result: { kind: 'insufficient-evidence', reason: 'unresolved pair: the token position and the assignment are neither one claim group nor declared distinct', missing: [`${silentToken._id} / ${aliasedContract._id}`] },
+    evaluator: caip10(A.evaluator),
+    notes: 'Exception vector "Additivity must be established", silent case, alternative statement to the interval receipt.',
+  });
+  manifest.units.push({ unitId: 12, name: docSilent.unit.name, file: 'revenue-holdings-silent.json', boundaryHash: silentHash, contains: [], elements: Object.fromEntries([silentToken, aliasedContract].map((e) => [e.label || e.ref, e._id])), controller: CONTROLLER_OVERRIDE || A.analystB });
+
+  // 13. Two tranches declared distinct: the fund holds the tokenized 40% and a second assignment of another 40%, both on
+  // the same underlying, and states with a basis that they are two claims.
+  const AGREEMENT_B = 'urn:x:agreement:summarizer-fee-assignment-2026-b';
+  const secondAssignment = el('financial-position', AGREEMENT_B, {
+    label: 'Assigned right to a further 40% of the license fee stream of Unit 1 (second assignment agreement)',
+    underlying: { ...underlying, basis: [AGREEMENT_B] },
+  });
+  const docDistinct = definition({
+    name: 'Fund G revenue holdings (two tranches declared distinct)',
+    summary: 'Fund G holds the RST tokens (the tokenized 40% of the fee stream) and a second assignment agreement for a further 40%. Both positions declare the same underlying, so they are overlap candidates; the fund declares them distinct claims with both source agreements as basis, and the net-equity method counts them separately.',
+    tags: ['composite', 'additivity-vector'],
+    elements: [tokenPosition, secondAssignment],
+    relations: [
+      rel('holds', 'unit', tokenPosition, { quantity: { amount: '400', unit: 'RST' }, share: '0.4', counterparty: caip10(A.skillOwner), basis: [TOKEN_TERMS] }),
+      rel('holds', 'unit', secondAssignment, { share: '0.4', counterparty: caip10(A.skillOwner), basis: [AGREEMENT_B] }),
+      relSet('distinct-claim', [tokenPosition, secondAssignment], { scope: 'two separate assignments of 40% each (80% of the stream in total), under the tokenization terms and under a second agreement', basis: [TOKEN_TERMS, AGREEMENT_B] }),
+    ],
+    ports: [{ id: 'distributions-in', direction: 'in', class: 'funds', template: 'auf:port:funds-in@1', asset: STABLE, account: caip10(A.fundGTreasury) }],
+    authorities: { definitionController: caip10(A.fundG), settlementAccounts: [caip10(A.fundGTreasury)] },
+    scale: { window: 'P30D' },
+  });
+  const distinctHash = canonicalHash(docDistinct);
+  write('revenue-holdings-distinct.json', docDistinct);
+  write('revenue-holdings-distinct.characterization.json', {
+    auf: '1.0', kind: 'characterization', subject: subject(13, 1, distinctHash),
+    roles: [roleStmt('container', S.unit(), { mechanism: 'rights', conditions: 'two 40% entitlements to the fee stream, held under two instruments' })],
+    structure: { profile: 'auf:structure:composite@1' },
+    knowledge: { status: 'classified', notes: 'The distinct-claim declaration is made by the fund with both source agreements as basis; it is claimed until the obligor endorses either position.' },
+  });
+  write('revenue-holdings-distinct.valuation.net-equity.json', {
+    auf: '1.0', kind: 'valuation', subject: subject(13, 1, distinctHash), assessmentBoundary: { hash: distinctHash },
+    interest: { id: 'auf:interest:net-equity@1', perspective: 'holder' },
+    snapshot: { asOf: '2026-11-01T00:00:00Z', hash: snapshotHash },
+    method: { id: M.netEquity, name: 'auf:method:net-equity@1', params: { denomination: 'USD', assets: [priceInput(tokenPosition), priceInput(secondAssignment)], liabilities: [] } },
+    inputs: {
+      data: [{ element: tokenPosition._id, source: 'RST balance of the fund' }, { element: secondAssignment._id, source: 'second assignment agreement' }, { receipt: dcfHash, use: 'value of the whole fee stream' }],
+      overlaps: [{ elements: [tokenPosition._id, secondAssignment._id], treatment: 'distinct', basis: [TOKEN_TERMS, AGREEMENT_B], notes: 'declared distinct-claim in the definition of this Unit (same underlying, two separate assignments); each tranche enters the sum' }],
+      coverage: 'the two entitlements only; no other assets or liabilities',
+    },
+    result: { kind: 'monetary', value: TWICE, denomination: 'USD', decimals: 2 },
+    evaluator: caip10(A.evaluator),
+    notes: 'Exception vector "Additivity must be established", declared case: two tranches of 40% each, counted separately (2 x 45.12 = 90.24).',
+  });
+  manifest.units.push({ unitId: 13, name: docDistinct.unit.name, file: 'revenue-holdings-distinct.json', boundaryHash: distinctHash, contains: [], elements: Object.fromEntries([tokenPosition, secondAssignment].map((e) => [e.label || e.ref, e._id])), controller: CONTROLLER_OVERRIDE || A.fundG });
 })();
 
 for (const u of manifest.units) u.companions = companions[u.unitId] || [];
