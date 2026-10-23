@@ -9,6 +9,7 @@ const path = require('path');
 const Ajv2020 = require('ajv/dist/2020');
 const addFormats = require('ajv-formats');
 const { canonicalHash, elementId } = require('./lib/canonical');
+const { equalDecimalSums } = require('./lib/decimal');
 
 const ROOT = path.join(__dirname, '..', 'assets', 'erc-auf');
 const SCHEMAS = path.join(ROOT, 'schemas');
@@ -107,15 +108,18 @@ for (const { file, doc } of docs) {
           if (!missing.has(m) && a[m] === undefined) fail(file, `asset ${a.asset}: member ${m} absent but not listed as missing`);
         }
         if (members.every((m) => a[m] !== undefined)) {
-          const n = (s) => BigInt(Math.round(Number(s) * 1e6));
-          const adj = a.adjustments.reduce((acc, x) => acc + n(x.amount), 0n);
-          const lhs = n(a.closing) - n(a.opening);
-          const rhs = n(a.inflow) - n(a.outflow) + n(a.minted) - n(a.burned) + adj;
-          if (lhs !== rhs) fail(file, `asset ${a.asset}: reconciliation failed (${lhs} != ${rhs})`);
-          const transfersIn = (a.transfers || []).filter((t) => t.direction === 'in').reduce((acc, t) => acc + n(t.amount), 0n);
-          const transfersOut = (a.transfers || []).filter((t) => t.direction === 'out').reduce((acc, t) => acc + n(t.amount), 0n);
-          if ((a.transfers || []).length && (transfersIn !== n(a.inflow) || transfersOut !== n(a.outflow))) {
-            fail(file, `asset ${a.asset}: transfers do not add up to inflow/outflow`);
+          try {
+            if (!equalDecimalSums([a.closing, a.outflow, a.burned],
+              [a.opening, a.inflow, a.minted, ...a.adjustments.map((x) => x.amount)])) {
+              fail(file, `asset ${a.asset}: reconciliation failed`);
+            }
+            const transfersIn = (a.transfers || []).filter((t) => t.direction === 'in').map((t) => t.amount);
+            const transfersOut = (a.transfers || []).filter((t) => t.direction === 'out').map((t) => t.amount);
+            if ((a.transfers || []).length && (!equalDecimalSums(transfersIn, [a.inflow]) || !equalDecimalSums(transfersOut, [a.outflow]))) {
+              fail(file, `asset ${a.asset}: transfers do not add up to inflow/outflow`);
+            }
+          } catch (e) {
+            fail(file, `asset ${a.asset}: invalid observation amount (${e.message})`);
           }
         }
       }
