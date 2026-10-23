@@ -43,7 +43,8 @@ docs/                                design memo, financial-circuit profile, Mag
 npm install
 forge build
 forge test
-npm run check          # rebuild examples, regenerate vectors, validate schemas, run the offline resolver
+npm run check          # rebuild examples, regenerate vectors, validate schemas, run the resolver and tool tests
+npm run test:tools     # exact-decimal observation regressions, including the validator and resolver CLIs
 npm run lint:erc       # eipw lint of the ERC text (spelling findings are listed, not gating)
 python3 scripts/make-filing-package.py --number 8454
 ```

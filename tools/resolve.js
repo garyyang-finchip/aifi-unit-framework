@@ -22,6 +22,7 @@ const fs = require('fs');
 const path = require('path');
 const { JsonRpcProvider, Contract } = require('ethers');
 const { canonicalHash, elementId, parseUnitRef } = require('./lib/canonical');
+const { equalDecimalSums } = require('./lib/decimal');
 
 const args = process.argv.slice(2);
 const arg = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
@@ -157,16 +158,20 @@ function checkExtensions(doc, where, report) {
 
 function checkObservation(doc) {
   const problems = [];
-  const n = (s) => BigInt(Math.round(Number(s) * 1e6));
   for (const a of doc.assets || []) {
     const members = ['opening', 'closing', 'inflow', 'outflow', 'minted', 'burned', 'adjustments'];
     const missing = new Set(a.missing || []);
     const absent = members.filter((m) => a[m] === undefined && !missing.has(m));
     if (absent.length) problems.push(`asset ${a.asset}: members absent without being listed as missing: ${absent.join(', ')}`);
     if (members.every((m) => a[m] !== undefined)) {
-      const adj = a.adjustments.reduce((acc, x) => acc + n(x.amount), 0n);
-      const ok = n(a.closing) - n(a.opening) === n(a.inflow) - n(a.outflow) + n(a.minted) - n(a.burned) + adj;
-      if (!ok) problems.push(`asset ${a.asset}: reconciliation failed`);
+      try {
+        if (!equalDecimalSums([a.closing, a.outflow, a.burned],
+          [a.opening, a.inflow, a.minted, ...a.adjustments.map((x) => x.amount)])) {
+          problems.push(`asset ${a.asset}: reconciliation failed`);
+        }
+      } catch (e) {
+        problems.push(`asset ${a.asset}: invalid observation amount (${e.message})`);
+      }
     } else {
       problems.push(`asset ${a.asset}: reconciliation not checkable (missing: ${[...missing].join(', ')}); missing values are unknown, not zero`);
     }
