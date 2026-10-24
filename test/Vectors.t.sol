@@ -42,6 +42,17 @@ contract VectorsTest is Test {
         );
     }
 
+    function testRelationIdentifierVector() public view {
+        string memory j = _json("identifiers.json");
+        string memory jcs = vm.parseJsonString(j, ".relationIdExample.jcs");
+        assertEq(keccak256(bytes(jcs)), vm.parseJsonBytes32(j, ".relationIdExample.relationId"));
+        assertEq(keccak256(bytes(jcs)), 0x278b09b08d758f53df11e5e824c5253aa96ed5b102ae7b365cf8ebbb96d45223);
+        // the declarations of the worked examples carry their relationId (Unit 13: one distinct-claim set)
+        string memory e = _json("examples.json");
+        assertEq(vm.parseJsonString(e, ".units[12].declarations[0].type"), "distinct-claim");
+        assertTrue(vm.parseJsonBytes32(e, ".units[12].declarations[0].relationId") != bytes32(0));
+    }
+
     // ------------------------------------------------------------ canonicalization
 
     function testCanonicalizationVector() public view {

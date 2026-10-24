@@ -14,6 +14,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { test } = require('node:test');
 const { offlineSource, resolveSummary } = require('../resolve');
+const { relationId } = require('../lib/canonical');
 
 const ROOT = path.resolve(__dirname, '../..');
 const EXAMPLES = path.join(ROOT, 'assets/erc-auf/examples');
@@ -67,14 +68,46 @@ test('vector 9: a distinct-claim declaration with a basis resolves the pair; the
   assert.equal(s.problems, 0);
 });
 
-test('vector 9: the declaration is confirmed by a description endorsement of the controller of the underlying', async () => {
-  const skillOwner = unit(1).controller.toLowerCase(); // Definition Controller of Unit 1, the underlying of both tranches
-  const src = Object.assign(offlineSource(), { async endorsedBy(unitId, version, elementId, account) { return unitId === 13 && version === 1 && account === skillOwner; } });
-  const s = await resolveSummary(src, 13, 1);
+test('vector 9: confirmation binds to the relation id on the declaring version, not to an endorsement of a position', async () => {
+  const skillOwner = unit(1).controller.toLowerCase(); // Definition Controller of Unit 1, the underlying of both tranches of Unit 13
+  const definition = JSON.parse(fs.readFileSync(path.join(EXAMPLES, 'revenue-holdings-distinct.json'), 'utf8'));
+  const declaration = definition.relations.find((r) => r.type === 'distinct-claim');
+  const relId = relationId(declaration);
+  const tokenPosition = elementOf(13, 'RST revenue-share tokens');
+  const endorsing = (subjects) => Object.assign(offlineSource(), { async endorsedBy(unitId, version, subject, account) { return subjects.some(([u, v, s, a]) => u === unitId && v === version && s === subject && a === account); } });
+
+  // the declaration's own identifier, on the declaring version, by the controller of the underlying -> confirmed
+  let s = await resolveSummary(endorsing([[13, 1, relId, skillOwner]]), 13, 1);
   assert.equal(s.distinctPairs[0].confirmation, 'confirmed');
-  assert.equal(s.distinctPairs[0].confirmedBy, skillOwner);
-  const stranger = Object.assign(offlineSource(), { async endorsedBy() { return false; } });
-  assert.equal((await resolveSummary(stranger, 13, 1)).distinctPairs[0].confirmation, 'claimed');
+  assert.deepEqual(s.distinctPairs[0].confirmedBy, [skillOwner]);
+  assert.equal(s.distinctPairs[0].declaredBy[0].relationId, relId);
+
+  // the reviewer's scenario: the issuer endorsed position A (here on Unit 8, before the parent declared A distinct from B),
+  // and even an endorsement of A on the declaring version itself -> the declaration stays claimed
+  s = await resolveSummary(endorsing([[8, 1, tokenPosition, skillOwner], [13, 1, tokenPosition, skillOwner]]), 13, 1);
+  assert.equal(s.distinctPairs[0].confirmation, 'claimed');
+
+  // the relation id endorsed on another version, or by an account that controls no covered position -> claimed
+  s = await resolveSummary(endorsing([[13, 2, relId, skillOwner], [13, 1, relId, unit(13).controller.toLowerCase()]]), 13, 1);
+  assert.equal(s.distinctPairs[0].confirmation, 'claimed');
+});
+
+test('vector 9: with different obligors, each side must endorse the declaration for its pair to be confirmed', async () => {
+  const definition = JSON.parse(fs.readFileSync(path.join(EXAMPLES, 'skill-multi-license.json'), 'utf8'));
+  const relId = relationId(definition.relations.find((r) => r.type === 'distinct-claim'));
+  const licA = elementOf(1, 'receivable from A');
+  const licB = elementOf(1, 'receivable from B');
+  const licC = elementOf(1, 'receivable from C');
+  const counterpartyOf = (id) => definition.relations.find((r) => r.to === id && r.counterparty).counterparty.split(':').pop().toLowerCase();
+  const [a, b] = [counterpartyOf(licA), counterpartyOf(licB)];
+  const endorsing = (accounts) => Object.assign(offlineSource(), { async endorsedBy(unitId, version, subject, account) { return unitId === 1 && version === 1 && subject === relId && accounts.includes(account); } });
+  const pairOf = (s, x, y) => s.distinctPairs.find((d) => d.elements.includes(x) && d.elements.includes(y));
+  let s = await resolveSummary(endorsing([a]), 1, 1);
+  assert.equal(pairOf(s, licA, licB).confirmation, 'claimed', 'licensee A alone cannot vouch for B');
+  s = await resolveSummary(endorsing([a, b]), 1, 1);
+  assert.equal(pairOf(s, licA, licB).confirmation, 'confirmed');
+  assert.equal(pairOf(s, licA, licC).confirmation, 'claimed', 'C has not endorsed');
+  assert.equal(s.distinctPairs.filter((d) => d.confirmation === 'confirmed').length, 1);
 });
 
 function withExtraReceipt(t, file, doc) {

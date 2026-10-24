@@ -22,7 +22,7 @@
 const fs = require('fs');
 const path = require('path');
 const { JsonRpcProvider, Contract } = require('ethers');
-const { canonicalHash, elementId, parseUnitRef } = require('./lib/canonical');
+const { canonicalHash, elementId, parseUnitRef, relationId } = require('./lib/canonical');
 const { equalDecimalSums } = require('./lib/decimal');
 
 const args = process.argv.slice(2);
@@ -279,7 +279,7 @@ async function resolveUnit(src, unitId, version, report, pathSoFar = [], depth =
       if (Array.isArray(r.elements)) {
         // set form (Section 3.4): the relation holds between every pair of the listed elements
         for (const id of r.elements) if (!ids.has(id)) node.problems.push(`${r.type} set references unknown element ${id}`);
-        if (identity && r.elements.length >= 2) report.claimDeclarations.push({ type: r.type, members: [...new Set(r.elements)], basis: r.basis || [], declaredIn: `${unitId}@${version}`, unitId, version });
+        if (identity && r.elements.length >= 2) report.claimDeclarations.push({ type: r.type, members: [...new Set(r.elements)], basis: r.basis || [], declaredIn: `${unitId}@${version}`, unitId, version, relationId: relationId(r) });
         continue;
       }
       for (const end of [r.from, r.to]) if (end !== 'unit' && !ids.has(end)) node.problems.push(`relation ${r.type} references unknown endpoint ${end}`);
@@ -288,7 +288,7 @@ async function resolveUnit(src, unitId, version, report, pathSoFar = [], depth =
         if (hits) { hits[hits.length - 1].relation = { type: r.type, share: r.share, exclusive: r.exclusive }; if (r.counterparty) hits[hits.length - 1].counterparty = r.counterparty; }
       }
       if (identity && r.from !== 'unit' && r.to !== 'unit') {
-        report.claimDeclarations.push({ type: r.type, members: [r.from, r.to], basis: r.basis || [], declaredIn: `${unitId}@${version}`, unitId, version });
+        report.claimDeclarations.push({ type: r.type, members: [r.from, r.to], basis: r.basis || [], declaredIn: `${unitId}@${version}`, unitId, version, relationId: relationId(r) });
       }
     }
     // containment: on-chain list must match the definition's contains relations
@@ -381,38 +381,42 @@ function pairResolution(report, groupOf) {
       }
       const ua = underlyingOf.get(a); const ub = underlyingOf.get(b);
       const sharedUnderlying = ua && ub && ua === ub ? ua : null;
-      if (decl) resolved.push({ elements: [a, b], sharedUnderlying, declaredBy: decl.map((d) => ({ in: d.declaredIn, unitId: d.unitId, version: d.version, basis: d.basis })), where: [where(a), where(b)] });
+      if (decl) resolved.push({ elements: [a, b], sharedUnderlying, declaredBy: decl.map((d) => ({ in: d.declaredIn, unitId: d.unitId, version: d.version, relationId: d.relationId, basis: d.basis })), where: [where(a), where(b)] });
       else unresolved.push({ elements: [a, b], sharedUnderlying, underlying: [ua || null, ub || null], where: [where(a), where(b)] });
     }
   }
   return { unresolved, resolved, contradictions };
 }
 
-// Confirmation of a declaration (Section 3.8): a description-endorsement of either element, on the declaring version,
-// by an account that controls the underlying (the element's controller, the relation's counterparty, or the
-// Definition Controller of the underlying Unit). Needs a source that can read acknowledgments; otherwise `claimed`.
+// Confirmation of a declaration (Section 3.8): a description-endorsement whose subject is the declaration's relationId,
+// on the declaring version, by an account that controls the underlying of a covered position (the element's
+// controller, the counterparty of the relation that includes it, or the Definition Controller of the underlying Unit).
+// Per pair: confirmed when one such account for both positions endorsed the declaration, or one for each position did.
+// Endorsements of the elements themselves do not count. Needs a source that reads acknowledgments; otherwise `claimed`.
 async function confirmDeclarations(src, report, pairs) {
   const account = (caip) => { const m = /^eip155:\d+:(0x[0-9a-fA-F]{40})$/.exec(caip || ''); return m ? m[1].toLowerCase() : null; };
+  const controllersOf = async (id) => {
+    const out = new Set();
+    for (const h of report.elementIndex.get(id) || []) {
+      if (account(h.controller)) out.add(account(h.controller));
+      if (account(h.counterparty)) out.add(account(h.counterparty));
+      const u = h.underlying && parseUnitRef(h.underlying.ref);
+      if (u && u.registry.toLowerCase() === String(src.registry).toLowerCase()) {
+        try { const v = await src.version(u.unitId, u.version); if (v.controller) out.add(String(v.controller).toLowerCase()); } catch (e) { /* unknown underlying unit */ }
+      }
+    }
+    return out;
+  };
   for (const pair of pairs) {
     pair.confirmation = 'claimed';
     if (!src.endorsedBy) continue;
-    const candidates = new Set();
-    for (const id of pair.elements) {
-      for (const h of report.elementIndex.get(id) || []) {
-        if (account(h.controller)) candidates.add(account(h.controller));
-        if (account(h.counterparty)) candidates.add(account(h.counterparty));
-        const u = h.underlying && parseUnitRef(h.underlying.ref);
-        if (u && u.registry.toLowerCase() === String(src.registry).toLowerCase()) {
-          try { const v = await src.version(u.unitId, u.version); if (v.controller) candidates.add(String(v.controller).toLowerCase()); } catch (e) { /* unknown underlying unit */ }
-        }
-      }
-    }
+    const [ca, cb] = [await controllersOf(pair.elements[0]), await controllersOf(pair.elements[1])];
     for (const d of pair.declaredBy) {
-      for (const id of pair.elements) {
-        for (const acct of candidates) {
-          if (await src.endorsedBy(d.unitId, d.version, id, acct)) { pair.confirmation = 'confirmed'; pair.confirmedBy = acct; }
-        }
-      }
+      const endorsers = new Set();
+      for (const acct of new Set([...ca, ...cb])) if (await src.endorsedBy(d.unitId, d.version, d.relationId, acct)) endorsers.add(acct);
+      const forA = [...endorsers].filter((x) => ca.has(x));
+      const forB = [...endorsers].filter((x) => cb.has(x));
+      if (forA.length && forB.length) { pair.confirmation = 'confirmed'; pair.confirmedBy = [...new Set([...forA, ...forB])]; pair.confirmedIn = d.declaredIn; }
     }
   }
 }
@@ -501,14 +505,17 @@ function printSummary(s, log = console.log) {
   const byDeclaration = new Map();
   for (const d of s.distinctPairs) {
     for (const x of d.declaredBy) {
-      const k = `${x.in}|${x.basis.join(',')}`;
-      if (!byDeclaration.has(k)) byDeclaration.set(k, { in: x.in, basis: x.basis, members: new Set(), pairs: 0, shared: 0, confirmation: d.confirmation, confirmedBy: d.confirmedBy });
+      const k = `${x.in}|${x.relationId}`;
+      if (!byDeclaration.has(k)) byDeclaration.set(k, { in: x.in, relationId: x.relationId, basis: x.basis, members: new Set(), pairs: 0, shared: 0, confirmed: 0, confirmedBy: new Set() });
       const g = byDeclaration.get(k);
       g.members.add(d.elements[0]); g.members.add(d.elements[1]); g.pairs++; if (d.sharedUnderlying) g.shared++;
-      if (d.confirmation === 'confirmed') { g.confirmation = 'confirmed'; g.confirmedBy = d.confirmedBy; }
+      if (d.confirmation === 'confirmed') { g.confirmed++; for (const a of d.confirmedBy || []) g.confirmedBy.add(a); }
     }
   }
-  for (const g of byDeclaration.values()) log(`  distinct (${g.confirmation}${g.confirmedBy ? ' by ' + g.confirmedBy : ''}): {${[...g.members].map((m) => m.slice(0, 10)).join(', ')}} declared distinct claims in ${g.in} (basis ${g.basis.join(', ')}): ${g.pairs} pair(s) resolved${g.shared ? `, ${g.shared} of them with a shared underlying` : ''} -> counted separately`);
+  for (const g of byDeclaration.values()) {
+    const status = g.confirmed === 0 ? 'claimed' : g.confirmed === g.pairs ? `confirmed by ${[...g.confirmedBy].join(', ')}` : `confirmed for ${g.confirmed} of ${g.pairs} pairs by ${[...g.confirmedBy].join(', ')}`;
+    log(`  distinct (${status}): {${[...g.members].map((m) => m.slice(0, 10)).join(', ')}} declared distinct claims in ${g.in} (relation ${g.relationId.slice(0, 10)}, basis ${g.basis.join(', ')}): ${g.pairs} pair(s) resolved${g.shared ? `, ${g.shared} of them with a shared underlying` : ''} -> counted separately`);
+  }
   for (const c of s.unresolvedPairs) log(`  UNRESOLVED PAIR: ${c.elements[0]} (${c.where[0].join(', ')}) and ${c.elements[1]} (${c.where[1].join(', ')})${c.sharedUnderlying ? ` share the underlying ${c.sharedUnderlying} (overlap candidate) and` : ` (underlying ${c.underlying[0] || 'not declared'} / ${c.underlying[1] || 'not declared'}; no overlap detected, which establishes nothing)`} carry no same-claim or distinct-claim declaration -> no point value admissible; interval or insufficient-evidence only`);
   for (const p of s.overlapProblems) log(`  ! ${p}`);
   for (const u of s.unsupported) log(`  UNSUPPORTED required extension ${u.extension} at ${u.where}`);

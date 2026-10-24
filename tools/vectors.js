@@ -60,7 +60,9 @@ for (const f of fs.readdirSync(methodsDir).sort()) {
 const exKind = 'skill';
 const exRef = 'eip155:11155111/erc721:0x00000000000000000000000000000000000000aa/1';
 identifiers.elementIdExample = { kind: exKind, ref: exRef, preimage: `${exKind}:${exRef}`, elementId: C.elementId(exKind, exRef) };
-identifiers.note = 'profileId / interestId / denominationId / descriptorKind = keccak256(UTF-8(identifier)); methodId = keccak256(UTF-8(JCS(descriptor)))';
+const exRelation = { type: 'distinct-claim', elements: ['0x' + '11'.repeat(32), '0x' + '22'.repeat(32)], basis: ['urn:x:agreement:a', 'urn:x:agreement:b'] };
+identifiers.relationIdExample = { relation: exRelation, jcs: C.canonicalString(exRelation), relationId: C.relationId(exRelation) };
+identifiers.note = 'profileId / interestId / denominationId / descriptorKind = keccak256(UTF-8(identifier)); methodId = keccak256(UTF-8(JCS(descriptor))); relationId = keccak256(UTF-8(JCS(relation))) for identity relations (Section 3.4)';
 write('identifiers.json', identifiers);
 
 // ----------------------------------------------------------------------------- canonicalization
@@ -140,6 +142,7 @@ const exceptions = [
       { case: 'silent', definition: 'examples/revenue-holdings-silent.json (no underlying on the token position; the assignment under a URL, with an underlying that names the fee stream under another URI; no declaration)', expected: 'unresolved pair, no overlap candidate; receipts examples/revenue-holdings-silent.valuation.net-equity.interval.json (45.12 to 90.24) and examples/revenue-holdings-silent.valuation.net-equity.insufficient-evidence.json; a point-valued receipt is reported as non-conforming' },
       { case: 'declared distinct', definition: 'examples/revenue-holdings-distinct.json (same underlying, distinct-claim set with the two agreements as basis)', expected: 'pair resolved as distinct (claimed); receipt examples/revenue-holdings-distinct.valuation.net-equity.json monetary 90.24 with treatment distinct and basis' },
       { case: 'evaluator-side evidence', definition: 'examples/revenue-holdings-silent.json', expected: 'a monetary receipt whose inputs.overlaps states treatment distinct with a basis for the pair is accepted; the pair stays unresolved at the definition level and is still reported' },
+      { case: 'confirmation binds to the relation', definition: 'examples/revenue-holdings-distinct.json (relationId of its distinct-claim declaration listed in examples.json)', expected: 'a description-endorsement whose subject is the relationId, on version 1 of Unit 13, by the Definition Controller of Unit 1 (the underlying of both tranches) makes the declaration confirmed; an endorsement of the token position alone (on Unit 8 or on Unit 13), an endorsement of the relationId on another version, or one by an account that controls no covered position leaves it claimed; with different obligors (Unit 1), a pair is confirmed only when an account for each side has endorsed the declaration' },
     ],
     test: 'tools/test/resolve-claims.test.js',
   },
@@ -218,6 +221,12 @@ const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'assets', 'erc-auf',
 write('examples.json', {
   registry: manifest.registry,
   chainId: manifest.chainId,
-  units: manifest.units.map((u) => ({ unitId: u.unitId, file: `examples/${u.file}`, boundaryHash: u.boundaryHash, contains: u.contains, controller: u.controller, companions: u.companions, ...(u.v2 ? { v2: { file: `examples/${u.v2.file}`, boundaryHash: u.v2.boundaryHash } } : {}) })),
+  units: manifest.units.map((u) => ({ unitId: u.unitId, file: `examples/${u.file}`, boundaryHash: u.boundaryHash, contains: u.contains, controller: u.controller, companions: u.companions, declarations: declarationsOf(u.file), ...(u.v2 ? { v2: { file: `examples/${u.v2.file}`, boundaryHash: u.v2.boundaryHash, declarations: declarationsOf(u.v2.file) } } : {}) })),
+  note: 'declarations lists the identity relations of each definition with their relationId, the subject of a confirming description-endorsement (Sections 3.4 and 3.8).',
 });
+// identity relations of a definition file with their relationId
+function declarationsOf(file) {
+  const doc = JSON.parse(fs.readFileSync(path.join(ROOT, 'assets', 'erc-auf', 'examples', file), 'utf8'));
+  return (doc.relations || []).filter((r) => r.type === 'same-claim' || r.type === 'distinct-claim').map((r) => ({ type: r.type, elements: r.elements || [r.from, r.to], relationId: C.relationId(r) }));
+}
 console.log('done');

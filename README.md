@@ -8,7 +8,7 @@ Status: Draft, number ERC-8454 assigned on ethereum/ERCs pull request #2095 (edi
 
 The framework fixes three things and leaves the fourth open:
 
-1. **Boundary.** A Unit is a versioned Unit Definition: elements (agent, skill, task, service, model, compute, data, financial-position, nested unit), typed relations with the rights and obligations under which each element is included (owns, licenses, reserves, revenue-share, holds, owes, commits, pledges, depends-on, exchanges, controls, contains), economic interfaces (ports), authorities and validity. Positions declare what they are a claim against (`underlying`), and `same-claim` / `distinct-claim` declarations with a basis (pairwise or as a set) tell resolvers when two references are one entitlement and when two positions are distinct claims; every pair of positions that is neither is an unresolved pair, reported and admitting no point value, because the absence of a detected overlap does not establish distinctness. Each version is committed on chain by `boundaryHash = keccak256(JCS(definition))`.
+1. **Boundary.** A Unit is a versioned Unit Definition: elements (agent, skill, task, service, model, compute, data, financial-position, nested unit), typed relations with the rights and obligations under which each element is included (owns, licenses, reserves, revenue-share, holds, owes, commits, pledges, depends-on, exchanges, controls, contains), economic interfaces (ports), authorities and validity. Positions declare what they are a claim against (`underlying`), and `same-claim` / `distinct-claim` declarations with a basis (pairwise or as a set) tell resolvers when two references are one entitlement and when two positions are distinct claims; every pair of positions that is neither is an unresolved pair, reported and admitting no point value, because the absence of a detected overlap does not establish distinctness. A declaration is confirmed by an endorsement of the declaration itself (its `relationId`) on the declaring version, never by an endorsement of a position. Each version is committed on chain by `boundaryHash = keccak256(JCS(definition))`.
 2. **Characterization.** Stackable economic roles (source, sink, conductor, damping, container, pledge, valve, control) attributed to the Unit, a port or an element under stated conditions; behavior attributes (linearity, determinism, time variance, memory) declared separately; behavior models (the financial-circuit analysis profile among them); structure profiles (simple, composite, chip); application profiles (credit); explicit knowledge states (classified, unclassified, insufficient-evidence, not-applicable).
 3. **Measurement and valuation statements.** Observation records (per-asset stocks, port transfers, minting, burning, adjustments, non-cash changes, coverage; missing is never zero; reconciliation exact on the decimal strings) and valuation receipts (subject version, assessment boundary, interest and perspective, snapshot with the observations it cites, content-addressed method, inputs incl. the treatment of every claim group and overlap candidate, typed result incl. negative, interval, scenario, score, grade and "cannot value"). Resolvers present every receipt with the status of its cited evidence; a receipt whose observation was revoked is shown as resting on withdrawn evidence and is not presented as current.
 4. **Open:** the valuation functions, behavior models and credit models themselves. Methods are content-addressed descriptors; any evaluator can plug in any method while every reader still understands what a figure refers to.
@@ -27,7 +27,7 @@ assets/erc-auf/
   vectors/                           interface ids, identifiers, canonicalization, valuation vectors,
                                      EIP-712 vector, example hashes, methods/ (4 method descriptors)
   examples/                          13 worked Units with characterizations, observations and receipts
-test/                                Foundry suite (58 tests) incl. ethers <-> solc vector cross-checks
+test/                                Foundry suite (60 tests) incl. ethers <-> solc vector cross-checks
 tools/                               build-examples.js, vectors.js, validate.js, resolve.js, lint-erc.js,
                                      lib/ (canonicalization, exact decimals), test/ (node --test suites)
 script/SepoliaEvidence.s.sol         four-phase evidence run (deploy, register, assert, lifecycle)
@@ -60,6 +60,7 @@ python3 scripts/make-filing-package.py --number 8454
 | `IAUFAssertionRegistry` interface id | `0x46ae6e24` |
 | Canonicalization vector `boundaryHash` | `0xf77f708fc500b49c5471a1e6b9f268ccb7d26fb805a7cdf5b4a33a81b93d5be5` |
 | Element id vector | `0x3f13ce02d4a85ecacba5b5a5e6658105bf3f9208088d43b2d394a1c1ca00d656` |
+| Relation id vector | `0x278b09b08d758f53df11e5e824c5253aa96ed5b102ae7b365cf8ebbb96d45223` |
 | EIP-712 domain | name `AUFAssertionRegistry`, version `1` |
 
 Method ids of the four reference valuation profiles are in `assets/erc-auf/vectors/identifiers.json`.
@@ -90,7 +91,7 @@ Exception vectors (missing evidence, boundary change, internal transfer, shared 
 | 10 | `revenue-holdings-declared.json` | a fund holding both, declaring `same-claim` with a basis; net equity 45.12 (counted once) |
 | 11 | `revenue-holdings-undeclared.json` | an analyst's composite of both with no declaration: unresolved pair that is also an overlap candidate; interval 45.12 to 90.24 or insufficient evidence, never a point value |
 | 12 | `revenue-holdings-silent.json` | the same two holdings with no `underlying` on one side and an aliased URI on the other: no overlap detected, pair unresolved all the same; interval or insufficient evidence |
-| 13 | `revenue-holdings-distinct.json` | two tranches of 40% on the same underlying, declared distinct with both agreements as basis: net equity 90.24 (counted separately), reported as distinct (claimed) |
+| 13 | `revenue-holdings-distinct.json` | two tranches of 40% on the same underlying, declared distinct with both agreements as basis: net equity 90.24 (counted separately), reported as distinct (claimed until the declaration's `relationId` is endorsed by the controller of the underlying) |
 
 `node tools/resolve.js` resolves them offline (claim groups, declared-distinct pairs with their confirmation, unresolved pairs, receipt checks); `node tools/resolve.js --rpc ... --registry ... --assertions ... --unit N` resolves a deployment, listing every assertion with its status and every receipt with the evidence status of the observations it cites; `--examples <dir>` resolves another set of descriptors offline, for example the frozen ones of the Sepolia run.
 

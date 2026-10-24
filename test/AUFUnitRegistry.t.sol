@@ -239,6 +239,30 @@ contract AUFUnitRegistryTest is Test {
         assertEq(reg.acknowledgedAt(1, 2, ELEMENT, AckKind.DescriptionEndorsement, carol), 0);
     }
 
+    /// Registry behavior 9: the subject of an acknowledgment is an opaque identifier, so a description endorsement of an
+    /// identity relation (its relationId, Section 3.4) is recorded, read and withdrawn like one of an element, per version,
+    /// and an endorsement of an element of the same version says nothing for the relation (Section 3.8).
+    function testAcknowledgeRelationIdentifier() public {
+        reg.registerUnit(alice, H1, "v1", none);
+        vm.prank(alice);
+        reg.publishVersion(1, H2, "v2", none);
+        bytes32 relation = keccak256(
+            "{\"basis\":[\"urn:x:agreement:a\",\"urn:x:agreement:b\"],\"elements\":[\"0x1111111111111111111111111111111111111111111111111111111111111111\",\"0x2222222222222222222222222222222222222222222222222222222222222222\"],\"type\":\"distinct-claim\"}"
+        );
+        assertEq(relation, 0x278b09b08d758f53df11e5e824c5253aa96ed5b102ae7b365cf8ebbb96d45223); // relation identifier vector
+        vm.prank(carol);
+        reg.acknowledge(1, 1, ELEMENT, AckKind.DescriptionEndorsement); // the element: not the relation
+        assertEq(reg.acknowledgedAt(1, 1, relation, AckKind.DescriptionEndorsement, carol), 0);
+        vm.prank(carol);
+        reg.acknowledge(1, 1, relation, AckKind.DescriptionEndorsement);
+        assertGt(reg.acknowledgedAt(1, 1, relation, AckKind.DescriptionEndorsement, carol), 0);
+        assertEq(reg.acknowledgedAt(1, 2, relation, AckKind.DescriptionEndorsement, carol), 0); // another version
+        assertEq(reg.acknowledgedAt(1, 1, relation, AckKind.DescriptionEndorsement, alice), 0); // another account
+        vm.prank(carol);
+        reg.withdrawAcknowledgment(1, 1, relation, AckKind.DescriptionEndorsement);
+        assertEq(reg.acknowledgedAt(1, 1, relation, AckKind.DescriptionEndorsement, carol), 0);
+    }
+
     // ------------------------------------------------------------ ERC-165
 
     function testSupportsInterface() public view {

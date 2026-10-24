@@ -18,6 +18,11 @@ function elementId(kind, ref) {
   return keccak256(concat([toUtf8Bytes(kind), new Uint8Array([0x3a]), toUtf8Bytes(ref)]));
 }
 
+/** relationId of an identity relation = keccak256(UTF-8(JCS(relation))) (Section 3.4): the relation object as it appears in the definition. */
+function relationId(relation) {
+  return canonicalHash(relation);
+}
+
 /** profileId / interestId / denominationId / descriptorKind = keccak256(UTF-8(identifier)). */
 function idOf(identifier) {
   return keccak256(toUtf8Bytes(identifier));
@@ -83,4 +88,5 @@ module.exports = {
   interfaceId,
   encodeValuationCore,
   encodeObservationCore,
+  relationId,
 };
